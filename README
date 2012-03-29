@@ -1,0 +1,29 @@
+dserv.git
+		D-Script Engine program
+		shinpei(c)2012
+
+WHAT IS THIS?:
+ DSE is a D-Script engine, which is a core program for D-Script framework.
+ It recieves a script from DSE client, and executes them according to D-Script
+ execute protocol.
+ All of communications between DSE server - client are done through secure channel.
+ 
+
+REQUIREMENT:
+ + konoha-1.0+
+  you can donwload it from http://www.konohascript.org.
+ + konoha packages
+  - json, posix, io, subprocess, posix, ntrace, socket are needed.
+
+SIMPLE USAGE:
+ We include dclient.k which is a client program for DSE.
+ 1. First, run a DSE server.
+  > konoha dserv.k 
+ 2. Second, run a DSE client.
+  > konoha dclient.k
+
+  you can specify options for each programs to modify their behaviors.
+
+		
+		
+	  
