@@ -26,7 +26,7 @@ class DSEServer {
 
 	int major_version = 0;
 	int minor_version = 1;
-	int build_id = 2;
+	int build_id = 3;
 
 	DSEServer (String bindIP, int servingPort) {
 		_bindIP = bindIP;
@@ -216,42 +216,72 @@ int main (String[] args)
 	OUT << "servPort: " << servPort << EOL;
 	
 	int fd = s.socket(servFamily, CSock.SOCK_STREAM, 0);
+	s.optset(fd, CSock.SO_REUSEADDR, 1);
 	ret = s.bind(fd, "", servPort, servFamily);
 	ret = s.listen(fd, 1);
-	print "accepting..."
+	OUT <<  "accepting..." << EOL;
 	int servFd = s.accept(fd, servSockInfo);
-	print "accept done."	
+	OUT << "accept done." << EOL;
 
 	
 	int[] rfd = [fd, servFd];
-	ret = s.select(rfd, null, null, 1, 500000);
+	ret = s.select(rfd, null, null, 1, 100000);
 
+	// recv request header first
 	Bytes buf = new byte[64];
 	ret = s.recv(rfd[0], buf, 0);
 	String recvdata = buf.decode();
-	int i_length;
-	if (ret < 64) {
+	int contentLength;
+	String recvRequestData = "";
+	print ret;
+	if (ret != -1 && ret == 64) {
 		if ("\n\n" in? recvdata) {
-			// header completely recieved
-			print 'succes to recv header';
+			// recieved header, and a part of body
 			int idx = recvdata.indexOf("Content-Length: ");
+			int lineidx = recvdata.indexOf("\n\n");
 			idx += "Content-Length: ".getSize();
-			print idx;
 			String length = recvdata[idx: ];
 			length = length.replace("\n\n", "");
-			i_length = (int)length;
+			contentLength = (int)length;
+			OUT << "content length is :" + contentLength << EOL;
+			recvRequestData = recvdata[lineidx+2: ];
 		} else {
-			// ERROR, TODO;
+			ERR << "Recvdata isn't following DSE protocol." << EOL;
 		}
 	} else {
-		//TODO;
+		// we've received all of the data(header + body)
+		if ("\n\n" in? recvdata) {
+			int idx = recvdata.indexOf("Content-Length: ");
+			int lineidx = recvdata.indexOf("\n\n");
+			idx += "Content-Length: ".getSize();
+			String length = recvdata[idx: ];
+			length = length.replace("\n\n", "");
+			contentLength = (int)length;
+			OUT << "content length is :" + contentLength << EOL;
+			recvRequestData = recvdata[lineidx+2: ];
+			print recvRequestData;
+		} else {
+			ERR << "Recvdata isn't following DSE protocol." << EOL;
+		}
 	}
-	Bytes buf = new byte[i_length];
-	ret = s.recv(rfd[0], buf, 0);
+	Bytes recvbuf;
+	while (ret == 64) {
+		recvbuf = new byte[64];
+		ret = s.recv(rfd[0], recvbuf, 0);
+		OUT << "additionaly recv " << ret << " bytes from client" << EOL;
+		String recvText = recvbuf.decode();
+		recvRequestData += recvText;
+	}
+
 	OUT << "recv data size =" << ret << EOL;
-	String recvText = buf.decode();
-	Res res = process_request(recvText);
-	print res.req;
+
+	Res res = process_request(recvRequestData);
+	if (res.req == null) {
+		s.close(servFd); s.close(fd);
+		OUT << "DSE hasn't recv any data" << EOL;
+		return 0;
+	}
+
 	Json json = res.generateJson();
 	String send_text = json.stringify();
 	//first send response header.
@@ -264,7 +294,7 @@ int main (String[] args)
 	Bytes data_buf = send_text.encode();
 	ret = s.sendto(rfd[0], data_buf, 0, servIP, servPort, CSock.AF_INET);
 	total_sendsize+= ret;
-	print "total qosend bytes: " + total_sendsize;
+	print "total send bytes: " + total_sendsize;
 
 	s.close(servFd);
 	s.close(fd);

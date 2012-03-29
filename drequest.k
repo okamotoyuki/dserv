@@ -113,9 +113,12 @@ class DTaskResponse {
 	@Public DSEProtocolHeader makeHeader() {
 		Map inverseTypeMap = {dscript: 0, konoha: 1, sh: 2};
 		Map inverseModeMap = {typecheck: 0, monitor: 1, commit: 2, debug: 3};
-
-		DSEProtocolHeader header = new DSEProtocolHeader(inverseTypeMap[req.script], inverseModeMap[req.mode]);
-		return header;
+		if (req != null) {
+			DSEProtocolHeader header = new DSEProtocolHeader(inverseTypeMap[req.script], inverseModeMap[req.mode]);
+			return header;
+		} else {
+			return null;
+		}
 	}
 }
 

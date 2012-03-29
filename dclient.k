@@ -21,7 +21,7 @@ class DSEClient {
 
 	int major_version = 0;
 	int minor_version = 1;
-	int build_id = 2;
+	int build_id = 3;
 
 	DSEClient (String serverIP, int serverPort) {
 		_serverIP = serverIP;
@@ -47,7 +47,7 @@ class DSEClient {
 		return s.peername(fd);
 	}
 
-	String  sendRequest (DTaskRequest req) {
+	String sendRequest (DTaskRequest req) {
 		String response_json = "";
 		Bytes body_buf = new byte[0];
 		body_buf.writeJson(req);
@@ -81,13 +81,13 @@ class DSEClient {
 				String length = recvdata[idx: ];
 				length = length.replace("\n\n", "");
 				contentLength = (int)length;
-				print "content length is :" + contentLength;
+				OUT <<  "content length is :" + contentLength << EOL;
 				
 				// puts recieved response at the header
 				response_json = recvdata[lineidx+2: ];
 			} else {
 				// ERROR, wrong format, or protocol
-				print "Is this DSE Protocol??"
+				ERR << "Recvdata isn't following DSE protocol" << EOL;
 				return response_json;
 			}
 		} else {
@@ -131,8 +131,15 @@ class DSEClient {
 	}
 }
 
+Boolean parse_option(String[] args, DSEClient client)
+{
+	
+	return true;
+}
 
-int main (String[] args) {
+
+int main (String[] args)
+{
 	DSEClient client = new DSEClient(servIP, servPort);
 	OUT << "DSE Client: v" + client.printVersion() << EOL;
 	DTaskRequest myreq;
@@ -142,16 +149,21 @@ int main (String[] args) {
 		//OUT << client.dumpPeerName() << EOL;
 		myreq = new DTaskRequest("mytask", "konoha", "typecheck",
 											  "1223", "hoge", "localhost",
-											  "int i = 1;");
+											  "int i = 1; i = 'hoge'");
 	} else {
 		// parse options
-		parse_option(args);
-
+		if (!parse_option(args, client)) {
+			print "Something wrong with your arguments";
+			return 0;
+		}
+		// TODO: 
 	}
 	String response = client.sendRequest(myreq);
 	m = Json.parse(response);
 	print m;
+	
 	client.closeClient();
 
-	OUT << "DSE Client END" << EOL;
+	print "DSE Client END";
+	return 0;
 }
