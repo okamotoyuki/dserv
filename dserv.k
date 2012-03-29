@@ -294,7 +294,7 @@ int main (String[] args)
 	Bytes data_buf = send_text.encode();
 	ret = s.sendto(rfd[0], data_buf, 0, servIP, servPort, CSock.AF_INET);
 	total_sendsize+= ret;
-	print "total send bytes: " + total_sendsize;
+	OUT <<  "total send bytes: " + total_sendsize << EOL;
 
 	s.close(servFd);
 	s.close(fd);
