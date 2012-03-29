@@ -1,5 +1,7 @@
 using konoha.json.*;
 
+include "ddebug.k";
+
 LOGPOOL_DEFAULT_IP = "127.0.0.1";
 DEFAULT_SESSION_ID = "12345";
 

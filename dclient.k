@@ -35,6 +35,7 @@ class DSEClient {
 	
 	void connectToServer () {
 		fd = s.socket(CSock.AF_INET, CSock.SOCK_STREAM, 0);
+		s.optset(fd, CSock.SO_REUSEADDR, 1);
 		ret = s.bind(fd, "", _clientPort, CSock.AF_INET);
 		ret = s.connect(fd, _serverIP, _serverPort, CSock.AF_INET);
 	}
@@ -47,26 +48,9 @@ class DSEClient {
 		return s.peername(fd);
 	}
 
-	String sendRequest (DTaskRequest req) {
-		String response_json = "";
-		Bytes body_buf = new byte[0];
-		body_buf.writeJson(req);
-		DSEProtocolHeader header = req.makeHeader();
-
-		// set information
-		header.contentLength = body_buf.getSize();
-
-		Bytes header_buf = new byte[0];
-		String header_str = header.dump();
-		header_buf = header_str.encode();
-		print header_str ;
-		print body_buf.decode();
-		ret = s.sendto(fd, header_buf, 0, serverIP, serverPort, CSock.AF_INET);
-		ret = s.sendto(fd, body_buf, 0, serverIP, serverPort, CSock.AF_INET);
-		OUT << "send size: " + ret << EOL;
-
-
+	String recvResponse () {
 		// first, get response header;
+		String response_json = "";
 		Bytes buf = new byte[64];
 		ret = s.recv(fd, buf, 0);
 		print "response header size is: " + ret;
@@ -104,7 +88,7 @@ class DSEClient {
 				response_json = recvdata[lineidx+2: ];
 			} else {
 				// ERROR, wrong format, or protocol
-				print "Is this DSE Protocol??"
+				print "Is this DSE Protocol??";
 				return response_json;
 			}
 		}
@@ -119,6 +103,37 @@ class DSEClient {
 			response_json += recvText;
 		}
 		return response_json;
+	}
+
+	Boolean sendRequest (DTaskRequest req) {
+		Bytes body_buf = new byte[0];
+		body_buf.writeJson(req);
+		DSEProtocolHeader header = req.makeHeader();
+
+		// set information
+		header.contentLength = body_buf.getSize();
+
+		Bytes header_buf = new byte[0];
+		String header_str = header.dump();
+		header_buf = header_str.encode();
+		//		print header_str ;
+		//		print body_buf.decode();
+		int total_sendsize = 0;
+		ret = s.sendto(fd, header_buf, 0, serverIP, serverPort, CSock.AF_INET);
+		if (ret != -1) {
+			total_sendsize += ret;
+		} else {
+			// error 
+			return false;
+		}
+		ret = s.sendto(fd, body_buf, 0, serverIP, serverPort, CSock.AF_INET);
+		if (ret != -1) {
+			total_sendsize += ret;
+		} else {
+			return false;
+		}
+		OUT << "total send size: " + total_sendsize << EOL;
+		return true;
 	}
 
 	void closeClient () {
@@ -158,8 +173,14 @@ int main (String[] args)
 		}
 		// TODO: 
 	}
-	String response = client.sendRequest(myreq);
-	m = Json.parse(response);
+	String response = "";
+	if (client.sendRequest(myreq)) {
+		response = client.recvResponse();
+	} else {
+		ERR << "Request failed" << EOL;
+		return 0;
+	}
+	Json m = Json.parse(response);
 	print m;
 	
 	client.closeClient();

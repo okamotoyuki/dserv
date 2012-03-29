@@ -268,7 +268,7 @@ int main (String[] args)
 	while (ret == 64) {
 		recvbuf = new byte[64];
 		ret = s.recv(rfd[0], recvbuf, 0);
-		OUT << "additionaly recv " << ret << " bytes from client" << EOL;
+		debug("additionaly recv "  + ret + " bytes from client");
 		String recvText = recvbuf.decode();
 		recvRequestData += recvText;
 	}
@@ -294,10 +294,10 @@ int main (String[] args)
 	Bytes data_buf = send_text.encode();
 	ret = s.sendto(rfd[0], data_buf, 0, servIP, servPort, CSock.AF_INET);
 	total_sendsize+= ret;
-	OUT <<  "total send bytes: " + total_sendsize << EOL;
+	debug("total send bytes: " + total_sendsize);
 
 	s.close(servFd);
 	s.close(fd);
-	OUT << "DSE SERVER END" << EOL;
+	debug("DSE SERVER EXIT");
 	return 0;
 }
