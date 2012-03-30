@@ -17,31 +17,6 @@ DTASK_MODE         = ["typecheck", "commit", "monitor", "debug"];
 
 include "drequest.k";
 
-class DSEServer {
-	CSock s;
-	int fd;
-	String bindIP;
-	int servingPort;
-	int clientPort;
-
-	int major_version = 0;
-	int minor_version = 1;
-	int build_id = 3;
-
-	DSEServer (String bindIP, int servingPort) {
-		_bindIP = bindIP;
-		_servingPort = servingPort;
-	}
-
-	void startServer() {
-
-	}
-
-	String printVersion() {
-		return major_version + "." + minor_version + "." + build_id;
-	}
-}
-
 // typedefs
 Req = DTaskRequest;
 Res = DTaskResponse;
@@ -177,22 +152,54 @@ Map<String,DTaskFunc> task_functions = {
 
 
 Res process_request(String text) {
-	print text;
     if (text.getSize() == 0) {
         return new Res("failed", "recieved data length = 0");
     }
+	print text;
+	for (i=0; i < text.getSize(); i++) {
+		OUT <<  text[i] << "|" 
+	}
+	OUT << EOL;
     Req req = Req.parseJson(Json.parse(text));
+	debug( "MODE=" + req.mode);
     if (req.script in? DTASK_SCRIPT == false) {
         return new Res("failed", "invalid dtask script", req);
     }
     else if (req.mode in? DTASK_MODE == false) {
         return new Res("failed", "invalid dtask mode", req);
     }
-	System.ntraceNotice("mode", {mode: req.mode});
+
+
 	DTaskFunc task = task_functions[req.mode];
 	Res rs = task(req);
-	System.ntraceNotice("res", {mode: rs});
+	//	System.ntraceNotice("res", {mode: rs});
 	return rs;
+}
+
+class DSEServer {
+	CSock s;
+	int fd;
+	String bindIP;
+	int servingPort;
+	int clientPort;
+
+	int major_version = 0;
+	int minor_version = 1;
+	int build_id = 4;
+
+	DSEServer (String bindIP, int servingPort) {
+		_bindIP = bindIP;
+		_servingPort = servingPort;
+	}
+
+	void startServer() {
+
+	}
+
+	String printVersion() {
+		return major_version + "." + minor_version + "." + build_id;
+	}
+
 }
 
 
@@ -221,20 +228,22 @@ int main (String[] args)
 	ret = s.listen(fd, 1);
 	OUT <<  "accepting..." << EOL;
 	int servFd = s.accept(fd, servSockInfo);
+
 	OUT << "accept done." << EOL;
 
 	
-	int[] rfd = [fd, servFd];
-	ret = s.select(rfd, null, null, 1, 100000);
+	int[] rfd = [fd, servFd]; // fdsets
+	ret = s.select(rfd, null, null, 1, 5_000_000);
 
 	// recv request header first
-	Bytes buf = new byte[64];
-	ret = s.recv(rfd[0], buf, 0);
-	String recvdata = buf.decode();
+	Bytes recvbuf = new byte[64];
+	ret = s.recv(rfd[0], recvbuf, 0);
+	
+	String recvdata = recvbuf.decode();
 	int contentLength;
 	String recvRequestData = "";
-	print ret;
-	if (ret != -1 && ret == 64) {
+	debug("Request recv size is " + ret + " bytes");
+	if (ret != -1 ) {
 		if ("\n\n" in? recvdata) {
 			// recieved header, and a part of body
 			int idx = recvdata.indexOf("Content-Length: ");
@@ -243,38 +252,28 @@ int main (String[] args)
 			String length = recvdata[idx: ];
 			length = length.replace("\n\n", "");
 			contentLength = (int)length;
-			OUT << "content length is :" + contentLength << EOL;
+			debug("content length is: " + contentLength + " bytes");
 			recvRequestData = recvdata[lineidx+2: ];
+			print recvdata;
 		} else {
-			ERR << "Recvdata isn't following DSE protocol." << EOL;
+			ERR << "Recvdata isn't following DSE protocol" << EOL;
 		}
 	} else {
-		// we've received all of the data(header + body)
-		if ("\n\n" in? recvdata) {
-			int idx = recvdata.indexOf("Content-Length: ");
-			int lineidx = recvdata.indexOf("\n\n");
-			idx += "Content-Length: ".getSize();
-			String length = recvdata[idx: ];
-			length = length.replace("\n\n", "");
-			contentLength = (int)length;
-			OUT << "content length is :" + contentLength << EOL;
-			recvRequestData = recvdata[lineidx+2: ];
-			print recvRequestData;
-		} else {
-			ERR << "Recvdata isn't following DSE protocol." << EOL;
-		}
+		// ret == -1, error.
+		ERR << "recv failed." << EOL;
+		return 0;
 	}
-	Bytes recvbuf;
+
 	while (ret == 64) {
-		recvbuf = new byte[64];
-		ret = s.recv(rfd[0], recvbuf, 0);
+		Bytes tmpbuf = new byte[64];
+		ret = s.recv(rfd[0], tmpbuf, 0);
 		debug("additionaly recv "  + ret + " bytes from client");
-		String recvText = recvbuf.decode();
+		String recvText = tmpbuf.decode();
 		recvRequestData += recvText;
 	}
 
-	OUT << "recv data size =" << ret << EOL;
-
+	debug("Recv data size = " + ret);
+	print recvRequestData;
 	Res res = process_request(recvRequestData);
 	if (res.req == null) {
 		s.close(servFd); s.close(fd);
@@ -282,11 +281,16 @@ int main (String[] args)
 		return 0;
 	}
 
+	print "---------------------";
+	print res.req;
+	print "---------------------";
+
 	Json json = res.generateJson();
 	String send_text = json.stringify();
 	//first send response header.
 	DSEProtocolHeader header = res.makeHeader();
 	header.contentLength = send_text.getSize();
+	print header.contentLength;
 	String header_str = header.dump();
 	Bytes header_buf = header_str.encode();
 	ret = s.sendto(rfd[0], header_buf, 0, servIP, servPort, CSock.AF_INET);

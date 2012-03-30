@@ -21,7 +21,7 @@ class DSEClient {
 
 	int major_version = 0;
 	int minor_version = 1;
-	int build_id = 3;
+	int build_id = 4;
 
 	DSEClient (String serverIP, int serverPort) {
 		_serverIP = serverIP;
@@ -109,46 +109,44 @@ class DSEClient {
 		Bytes body_buf = new byte[0];
 		body_buf.writeJson(req);
 		DSEProtocolHeader header = req.makeHeader();
-
 		// set information
 		header.contentLength = body_buf.getSize();
-
-		Bytes header_buf = new byte[0];
+		
+		Bytes header_buf;
 		String header_str = header.dump();
+
 		header_buf = header_str.encode();
-		//		print header_str ;
-		//		print body_buf.decode();
 		int total_sendsize = 0;
-		ret = s.sendto(fd, header_buf, 0, serverIP, serverPort, CSock.AF_INET);
+		//		ret = s.sendto(fd, header_buf, 0, serverIP, serverPort, CSock.AF_INET);
+		ret = s.send(fd, header_buf, 0);
 		if (ret != -1) {
 			total_sendsize += ret;
 		} else {
 			// error 
+			ERR << "sendto failed!" << EOL;
 			return false;
 		}
-		ret = s.sendto(fd, body_buf, 0, serverIP, serverPort, CSock.AF_INET);
+		//		ret = s.sendto(fd, body_buf, 0, serverIP, serverPort, CSock.AF_INET);
+		ret = s.send(fd, body_buf, 0);
+
 		if (ret != -1) {
 			total_sendsize += ret;
 		} else {
+			ERR << "sendto failed!" << EOL;
 			return false;
 		}
+		s.shutdown(); // send FIN
 		OUT << "total send size: " + total_sendsize << EOL;
 		return true;
 	}
 
 	void closeClient () {
-		/*String error =  s.perror();
-		if (!(error in? "Success")) {
-			print error;
-		}
-		*/
 		s.close();
 	}
 }
 
 Boolean parse_option(String[] args, DSEClient client)
 {
-	
 	return true;
 }
 
@@ -160,11 +158,10 @@ int main (String[] args)
 	DTaskRequest myreq;
 	if (args.getSize() == 0) {
 		client.connectToServer();
-		//OUT << client.dumpName() << EOL;
-		//OUT << client.dumpPeerName() << EOL;
-		myreq = new DTaskRequest("mytask", "konoha", "typecheck",
-											  "1223", "hoge", "localhost",
-											  "int i = 1; i = 'hoge'");
+		myreq = new DTaskRequest(
+					 "mytask", "konoha", "typecheck",
+					 "1223", "hoge", "localhost",
+					 "int i = 1; i = 'hoge'");
 	} else {
 		// parse options
 		if (!parse_option(args, client)) {
@@ -185,6 +182,6 @@ int main (String[] args)
 	
 	client.closeClient();
 
-	print "DSE Client END";
+	debug("DSE Client END");
 	return 0;
 }
