@@ -199,7 +199,19 @@ class DSEServer {
 	String printVersion() {
 		return major_version + "." + minor_version + "." + build_id;
 	}
+}
 
+boolean verifyReqest (String requestText)
+{
+	if (requestText.getSize() == 0) {
+		
+		return false;
+	}
+
+	if (!("DSE/0.1" in? requestText)) {
+		print requestText;
+		return false;
+	}
 }
 
 
@@ -274,6 +286,12 @@ int main (String[] args)
 
 	debug("Recv data size = " + ret);
 	print recvRequestData;
+
+	if (!verifyReqest(recvRequestData)) {
+		ERR << "Request verification is failed." << EOL;
+		return 0;
+	}
+	
 	Res res = process_request(recvRequestData);
 	if (res.req == null) {
 		s.close(servFd); s.close(fd);
