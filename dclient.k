@@ -1,4 +1,5 @@
-/* DSE client
+/* 
+ * DSE client
  * shinpei(c)2012
  */
 
@@ -41,6 +42,10 @@ class DSEClient {
 	String filepath;
 	DTaskRequest dtask;
 
+	String type;
+	String mode;
+	String name;
+
 	DSEClient (String serverIP, int serverPort) {
 		_serverIP = serverIP;
 		_serverPort = serverPort;
@@ -49,14 +54,39 @@ class DSEClient {
 		/* set option */
 		_op = new OptionParser();
 		Func<String=>boolean> f = delegate(this, parseFileOption);
-		filepath = "";
-	    _op.addOption('-f', '--file', f, "specify script", "FILE");
+	    _op.addOption('-f', '--file', f, "specify script source file", "FILE");
+		_op.addOption('-t', '--type', delegate(this, parseTypeOption), "speficy script type", "TYPE");
+		_op.addOption('-m', '--mode', delegate(this, parseModeOption), "speficy execution mode", "MODE");
+		_op.addOption('-n', '--name', delegate(this, parseNameOption), "speficy dtask name", "NAME");
 
+		/* initialize */
+		_filepath = "";
+		_type = "konoha";
+		_mode = "commit";
+		_name = "defaultTask";
 	}
 	
 	boolean parseFileOption (String arg) {
 		_filepath = arg;
-		print _filepath;
+		debug(_filepath);
+		return true;
+	}
+
+	boolean parseTypeOption(String arg)	{
+		_type = arg;
+		print _type;
+		return true;
+	}
+
+	boolean parseModeOption(String arg)	{
+		_mode = arg;
+		print _mode;
+		return true;
+	}
+
+	boolean parseNameOption(String arg)	{
+		_name = arg;
+		print _name;
 		return true;
 	}
 
@@ -151,14 +181,14 @@ class DSEClient {
 			debug(line);
 			text += line;
 		}
-			
-		_dtask = new DTaskRequest ("mytask", "konoha", "typecheck",
+		
+		_dtask = new DTaskRequest (_name, _type, _mode,
 								   "1234", "hoge", "localhost",
 								   text);
 
 	}
 
-	Boolean sendRequest () {
+	boolean sendRequest () {
 		Bytes body_buf = new byte[0];
 		body_buf.writeJson(_dtask);
 		String writeText = body_buf.decode();

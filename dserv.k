@@ -64,7 +64,7 @@ Res doCommit(Req req) {
 	s.start("konoha " + script_source);
 	String str_stdout = "";
 	String str_stderr = "";
-	Boolean flagError = false;
+	boolean flagError = false;
 	// it wont wait more than 1 secs;
 	for (int i = 0; i < 20; i++) {
 		if (!s.isAlive()) {
@@ -83,11 +83,12 @@ Res doCommit(Req req) {
 		System.usleep(50_000);
 	}
 
-
+	print "hoge";
 	if (flagError) {
 		debug( "ERROR!!: " + str_stderr);
 		return new Res("error", str_stderr);
 	} else {
+		OUT << str_stdout << EOL;;
 		return new Res("success", str_stdout);
 	}
 }
@@ -107,7 +108,7 @@ Res doMonitor(Req req) {
 	s.start("konoha " + script_source);
 	String str_stdout = "";
 	String str_stderr = "";
-	Boolean flagError = false;
+	boolean flagError = false;
 	// it wont wait more than 1 secs;
 	for (int i = 0; i < 20; i++) {
 		if (!s.isAlive()) {

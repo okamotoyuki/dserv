@@ -20,9 +20,14 @@ SIMPLE USAGE:
  1. First, run a DSE server.
   > konoha dserv.k 
  2. Second, run a DSE client.
-  > konoha dclient.k
+  2-1. Without any option, default task will send 
+    > konoha dclient.k
+  2-2. By specifing options, you can specify dtask details.
+   you can specify options for each programs to modify their behaviors.
+    > konoha dclient.k -f mytask.k -m typecheck -n mytask -t konoha
 
-  you can specify options for each programs to modify their behaviors.
+   for more details, please refer help.
+    > konoha dclient.k --help
 
 		
 		

@@ -1,7 +1,20 @@
 /* optparse.k
  *  implementable option parser.
  *  shinpei(c)2012
+
  */
+
+
+/* TODO,
+ *  we want to write arguments dependency...
+ * for example, if --b specified, we need to specify
+ * all of --a, --b.
+ * --a can specify independently.
+ * we want to write something like that.
+ *
+ */
+
+__VERSION__ = "0.0.2";
 
 class OptionParser {
 	int opts;
@@ -48,26 +61,33 @@ class OptionParser {
 
 	boolean parse (String[] args)
 	{
+		int argc = args.getSize();
 		int parsedOpt = 0;
 		int idx = 0;
-		String first = args[idx++];
-		int opt_id = shortopts[first];
+		String opt_str = "";
+		int opt_id;
 		boolean ret = false;
-		if (opt_id == 0) {
-			opt_id = longopts[first];
-		}
+		
+		while (idx < argc) {
+			opt_str = args[idx++];
+			opt_id = shortopts[opt_str];
+		
+			if (opt_id == 0) {
+				opt_id = longopts[opt_str];
+			}
 
-		if (opt_id != 0) {
-			opt_id -= 1;
-			Func<String=>boolean> parseHandler = _actions[opt_id];
+			if (opt_id != 0) {
+				opt_id -= 1;
+				Func<String=>boolean> parseHandler = _actions[opt_id];
 
-			if (metavars[opt_id] != "") {
-				if (!check_availability(args, idx)) {
-					return false;
+				if (metavars[opt_id] != "") {
+					if (!check_availability(args, idx)) {
+						return false;
+					}
+					ret = parseHandler(args[idx++]);
+				} else {
+					ret = parseHandler("");
 				}
-				ret = parseHandler(args[idx++]);
-			} else {
-				ret = parseHandler("");
 			}
 		}
 		print ret;
