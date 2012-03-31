@@ -21,7 +21,7 @@ class DSEClient {
 
 	int major_version = 0;
 	int minor_version = 1;
-	int build_id = 4;
+	int build_id = 5;
 
 	DSEClient (String serverIP, int serverPort) {
 		_serverIP = serverIP;
@@ -108,15 +108,27 @@ class DSEClient {
 	Boolean sendRequest (DTaskRequest req) {
 		Bytes body_buf = new byte[0];
 		body_buf.writeJson(req);
+		String writeText = body_buf.decode();
+		print writeText;
+		print writeText.getSize();
+		Json js = Json.parse(writeText);
+		String hoge2 = js["mode"];
+		String hoge = js["name"];
+		print hoge + hoge2;
 		DSEProtocolHeader header = req.makeHeader();
 		// set information
 		header.contentLength = body_buf.getSize();
-		
+		String header_str = header.dump();		
+		String sending_data = header_str + writeText;
+		Bytes sending_buf = sending_data.encode();
+		int total_sendsize = 0;
+		ret = s.send(fd, sending_buf, 0);
+		total_sendsize += ret;
+		/*
 		Bytes header_buf;
-		String header_str = header.dump();
+
 
 		header_buf = header_str.encode();
-		int total_sendsize = 0;
 		//		ret = s.sendto(fd, header_buf, 0, serverIP, serverPort, CSock.AF_INET);
 		ret = s.send(fd, header_buf, 0);
 		if (ret != -1) {
@@ -128,13 +140,13 @@ class DSEClient {
 		}
 		//		ret = s.sendto(fd, body_buf, 0, serverIP, serverPort, CSock.AF_INET);
 		ret = s.send(fd, body_buf, 0);
-
 		if (ret != -1) {
 			total_sendsize += ret;
 		} else {
 			ERR << "sendto failed!" << EOL;
 			return false;
 		}
+		*/
 		s.shutdown(); // send FIN
 		OUT << "total send size: " + total_sendsize << EOL;
 		return true;
@@ -161,7 +173,7 @@ int main (String[] args)
 		myreq = new DTaskRequest(
 					 "mytask", "konoha", "typecheck",
 					 "1223", "hoge", "localhost",
-					 "int i = 1; i = 'hoge'");
+					 "int i = 1;");
 	} else {
 		// parse options
 		if (!parse_option(args, client)) {

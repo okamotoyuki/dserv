@@ -45,6 +45,9 @@ class DSEProtocolHeader {
 		}
 		header_str += "Content-Length: " + _contentLength + EOL;
 		header_str += EOL;
+		print header_str;
+		print header_str.getSize();
+		print header_str.getSize() + _contentLength;
 		return header_str;
 	}
 }

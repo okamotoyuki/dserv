@@ -152,15 +152,13 @@ Map<String,DTaskFunc> task_functions = {
 
 
 Res process_request(String text) {
-    if (text.getSize() == 0) {
-        return new Res("failed", "recieved data length = 0");
-    }
-	print text;
-	for (i=0; i < text.getSize(); i++) {
-		OUT <<  text[i] << "|" 
-	}
-	OUT << EOL;
+	debug(text);
+	Json json = Json.parse(text);
+	String s = json["name"];
+	print "size=" + text.getSize();
+	print s;
     Req req = Req.parseJson(Json.parse(text));
+
 	debug( "MODE=" + req.mode);
     if (req.script in? DTASK_SCRIPT == false) {
         return new Res("failed", "invalid dtask script", req);
@@ -185,7 +183,7 @@ class DSEServer {
 
 	int major_version = 0;
 	int minor_version = 1;
-	int build_id = 4;
+	int build_id = 5;
 
 	DSEServer (String bindIP, int servingPort) {
 		_bindIP = bindIP;
@@ -201,17 +199,18 @@ class DSEServer {
 	}
 }
 
-boolean verifyReqest (String requestText)
+boolean verifyReqestHeader (String requestText)
 {
 	if (requestText.getSize() == 0) {
-		
 		return false;
 	}
 
-	if (!("DSE/0.1" in? requestText)) {
+	if (!("DSE/0.1" in? requestText) && ("Content-Length" in? requestText)) {
 		print requestText;
 		return false;
 	}
+
+	return true;
 }
 
 
@@ -249,22 +248,33 @@ int main (String[] args)
 
 	// recv request header first
 	Bytes recvbuf = new byte[64];
+	recvbuf.setAll(0);
 	ret = s.recv(rfd[0], recvbuf, 0);
 	
 	String recvdata = recvbuf.decode();
+	print recvdata;
 	int contentLength;
-	String recvRequestData = "";
+	String recvRequestData;
 	debug("Request recv size is " + ret + " bytes");
+
+	if (!verifyReqestHeader(recvdata)) {
+		ERR << "Request verification is failed." << EOL;
+		return 0;
+	}
+
+	int idx = 0;
+	int lineidx = 0;
+	int total_recvsize = ret;
 	if (ret != -1 ) {
 		if ("\n\n" in? recvdata) {
 			// recieved header, and a part of body
-			int idx = recvdata.indexOf("Content-Length: ");
-			int lineidx = recvdata.indexOf("\n\n");
+			idx = recvdata.indexOf("Content-Length: ");
+			lineidx = recvdata.indexOf("\n\n");
 			idx += "Content-Length: ".getSize();
 			String length = recvdata[idx: ];
 			length = length.replace("\n\n", "");
 			contentLength = (int)length;
-			debug("content length is: " + contentLength + " bytes");
+			debug("Requests' content length is: " + contentLength + " bytes");
 			recvRequestData = recvdata[lineidx+2: ];
 			print recvdata;
 		} else {
@@ -276,6 +286,25 @@ int main (String[] args)
 		return 0;
 	}
 
+	// check if there are no more packets
+	print "first recv size= " + recvdata.getSize();
+	print "prefetchsize = " + recvRequestData.getSize() ;
+	print "contentLength = " + contentLength;
+
+	debug("prefetchdText = '" + recvRequestData + "'");
+	while (ret != -1 && total_recvsize < contentLength + idx) {
+		recvbuf.setAll(0);
+		ret = s.recv(rfd[0], recvbuf, 0);
+		if (ret != -1) {
+			String recvText = recvbuf.decode();
+			recvRequestData += recvText;
+			print "recv added, now = " + recvRequestData.getSize();
+			total_recvsize += ret;
+		}
+	}
+
+	/*
+	// additional recv
 	while (ret == 64) {
 		Bytes tmpbuf = new byte[64];
 		ret = s.recv(rfd[0], tmpbuf, 0);
@@ -283,14 +312,9 @@ int main (String[] args)
 		String recvText = tmpbuf.decode();
 		recvRequestData += recvText;
 	}
+	*/
 
-	debug("Recv data size = " + ret);
-	print recvRequestData;
-
-	if (!verifyReqest(recvRequestData)) {
-		ERR << "Request verification is failed." << EOL;
-		return 0;
-	}
+	debug("Recv data size = " + total_recvsize);
 	
 	Res res = process_request(recvRequestData);
 	if (res.req == null) {
