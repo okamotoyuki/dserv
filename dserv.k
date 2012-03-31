@@ -42,7 +42,6 @@ Res doTypecheck(Req req) {
 	if(s.isError()) {
 		response_str = s.error();
 	}
-	print req;
 	if (response_str != "" && "(error)" in? response_str) {
 		return new Res("error", response_str, req);
 	} else {
@@ -86,7 +85,7 @@ Res doCommit(Req req) {
 
 
 	if (flagError) {
-		print "ERROR!!: " + str_stderr;
+		debug( "ERROR!!: " + str_stderr);
 		return new Res("error", str_stderr);
 	} else {
 		return new Res("success", str_stdout);
@@ -155,10 +154,9 @@ Res process_request(String text) {
 	debug(text);
 	Json json = Json.parse(text);
 	String s = json["name"];
-	print "size=" + text.getSize();
-	print s;
+	debug("size=" + text.getSize());
+	debug(s);
     Req req = Req.parseJson(Json.parse(text));
-
 	debug( "MODE=" + req.mode);
     if (req.script in? DTASK_SCRIPT == false) {
         return new Res("failed", "invalid dtask script", req);
@@ -206,7 +204,7 @@ boolean verifyReqestHeader (String requestText)
 	}
 
 	if (!("DSE/0.1" in? requestText) && ("Content-Length" in? requestText)) {
-		print requestText;
+		debug(requestText);
 		return false;
 	}
 
@@ -252,7 +250,7 @@ int main (String[] args)
 	ret = s.recv(rfd[0], recvbuf, 0);
 	
 	String recvdata = recvbuf.decode();
-	print recvdata;
+	debug(recvdata);
 	int contentLength;
 	String recvRequestData;
 	debug("Request recv size is " + ret + " bytes");
@@ -276,7 +274,6 @@ int main (String[] args)
 			contentLength = (int)length;
 			debug("Requests' content length is: " + contentLength + " bytes");
 			recvRequestData = recvdata[lineidx+2: ];
-			print recvdata;
 		} else {
 			ERR << "Recvdata isn't following DSE protocol" << EOL;
 		}
@@ -287,9 +284,9 @@ int main (String[] args)
 	}
 
 	// check if there are no more packets
-	print "first recv size= " + recvdata.getSize();
-	print "prefetchsize = " + recvRequestData.getSize() ;
-	print "contentLength = " + contentLength;
+	debug("first recv size= " + recvdata.getSize());
+	debug("prefetchsize = " + recvRequestData.getSize());
+	debug("contentLength = " + contentLength);
 
 	debug("prefetchdText = '" + recvRequestData + "'");
 	while (ret != -1 && total_recvsize < contentLength + idx) {
@@ -298,7 +295,7 @@ int main (String[] args)
 		if (ret != -1) {
 			String recvText = recvbuf.decode();
 			recvRequestData += recvText;
-			print "recv added, now = " + recvRequestData.getSize();
+			debug("recv added, present recv data = " + recvRequestData.getSize());
 			total_recvsize += ret;
 		}
 	}
@@ -323,16 +320,11 @@ int main (String[] args)
 		return 0;
 	}
 
-	print "---------------------";
-	print res.req;
-	print "---------------------";
-
 	Json json = res.generateJson();
 	String send_text = json.stringify();
 	//first send response header.
 	DSEProtocolHeader header = res.makeHeader();
 	header.contentLength = send_text.getSize();
-	print header.contentLength;
 	String header_str = header.dump();
 	Bytes header_buf = header_str.encode();
 	ret = s.sendto(rfd[0], header_buf, 0, servIP, servPort, CSock.AF_INET);

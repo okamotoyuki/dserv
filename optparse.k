@@ -59,8 +59,7 @@ class OptionParser {
 
 		if (opt_id != 0) {
 			opt_id -= 1;
-			f = _actions[0];
-			parseHandler = _actions[opt_id];
+			Func<String=>boolean> parseHandler = _actions[opt_id];
 
 			if (metavars[opt_id] != "") {
 				if (!check_availability(args, idx)) {

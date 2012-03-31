@@ -36,7 +36,6 @@ class DSEProtocolHeader {
 	
 		// is ready??
 		String header_str = "";
-		print _mode;
 		if ( 0 <= _type && _type <= 2 && 0<= _mode && _mode <= 3) {
 			header_str = type_string[_type] + " " + mode_string[_mode] + " " + "DSE/0.1" + EOL;
 		} else {
@@ -45,9 +44,6 @@ class DSEProtocolHeader {
 		}
 		header_str += "Content-Length: " + _contentLength + EOL;
 		header_str += EOL;
-		print header_str;
-		print header_str.getSize();
-		print header_str.getSize() + _contentLength;
 		return header_str;
 	}
 }
@@ -118,9 +114,9 @@ class DTaskResponse {
 		Map inverseTypeMap = {dscript: 0, konoha: 1, sh: 2};
 		Map inverseModeMap = {typecheck: 0, monitor: 1, commit: 2, debug: 3};
 		if (req != null) {
-			print "#########################";
-			print "type: " + req.script + " mode: " + req.mode;
-			print "#########################";
+			debug("#########################");
+			debug("type: " + req.script + " mode: " + req.mode);
+			debug("#########################");
 			DSEProtocolHeader header = new DSEProtocolHeader(inverseTypeMap[req.script], inverseModeMap[req.mode]);
 			return header;
 		} else {
