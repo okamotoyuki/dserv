@@ -1,7 +1,12 @@
+/* DSE client
+ * shinpei(c)2012
+ */
+
 using konoha.socket.*;
 using konoha.json.*;
 
 include "drequest.k";
+include "optparse.k";
 
 String servIP = "127.0.0.1";
 int servPort = 9999;
@@ -10,6 +15,14 @@ Map servSockInfo = new Map();
 	
 String clientIP = "127.0.0.1";
 int clientFamily = CSock.AF_INET;
+
+/* option handlers */
+
+String filepath;
+// boolean parseFileOption (String arg) {
+// 	filepath = arg;
+// 	return true;
+// }
 
 class DSEClient {
 	CSock s;
@@ -23,12 +36,27 @@ class DSEClient {
 	int minor_version = 1;
 	int build_id = 5;
 
+	OptionParser op;
+
+	String filepath;
+	
 	DSEClient (String serverIP, int serverPort) {
 		_serverIP = serverIP;
 		_serverPort = serverPort;
 		_clientPort = 9998;
 
+		/* set option */
+		op = new OptionParser();
+		//		Func<String=>void> f = parseFileOption;
+		Func<String=>boolean> f = delegate(DSEClient, parseFileOption);
+	    op.addOption('-f', '--file', f, "specify script", "FILE");
 	}
+
+	@Static boolean parseFileOption (String arg) {
+		filepath = arg;
+		return true;
+	}
+
 	String printVersion() {
 		return major_version + "." + minor_version + "." + build_id;
 	}
@@ -159,6 +187,11 @@ class DSEClient {
 
 Boolean parse_option(String[] args, DSEClient client)
 {
+	
+	int argc = args.getSize();
+	if (argc % 2 == 1) return false;
+	
+		
 	return true;
 }
 
@@ -168,20 +201,18 @@ int main (String[] args)
 	DSEClient client = new DSEClient(servIP, servPort);
 	OUT << "DSE Client: v" + client.printVersion() << EOL;
 	DTaskRequest myreq;
-	if (args.getSize() == 0) {
-		client.connectToServer();
-		myreq = new DTaskRequest(
-					 "mytask", "konoha", "typecheck",
-					 "1223", "hoge", "localhost",
-					 "int i = 1;");
-	} else {
+	if (args.getSize() > 0) {
 		// parse options
-		if (!parse_option(args, client)) {
+		if (!client.op.parse(args)) {
 			print "Something wrong with your arguments";
 			return 0;
 		}
-		// TODO: 
 	}
+	client.connectToServer();
+	myreq = new DTaskRequest(
+				 "mytask", "konoha", "typecheck",
+				 "1223", "hoge", "localhost",
+				 "int i = 1;");
 	String response = "";
 	if (client.sendRequest(myreq)) {
 		response = client.recvResponse();
