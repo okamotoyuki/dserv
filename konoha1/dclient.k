@@ -1,3 +1,5 @@
+#!/usr/local/bin/konoha
+
 /* 
  * DSE client
  * shinpei(c)2012

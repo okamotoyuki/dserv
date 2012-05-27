@@ -1,0 +1,16 @@
+2012-03-31  Shinpei Nakata  <shinpei.nakata@gmail.com>
+
+	* dclient.k: add command parse, file read
+
+	* dserv.k, dclient.k: stabilize communications
+
+2012-03-30  Shinpei Nakata  <shinpei.nakata@gmail.com>
+
+	* dclient.k: add shutdown()
+
+	* dserv.k (DTaskFunc): modified
+
+	* drequest.k (MODE_DEBUG): modified.
+
+	* dclient.k: modified.
+

@@ -1,5 +1,5 @@
 dserv.git
-		D-Script Engine 
+		D-Script Engine program
 		shinpei(c)2012
 
 WHAT IS THIS?:
@@ -10,10 +10,10 @@ WHAT IS THIS?:
  
 
 REQUIREMENT:
- + konoha-2.0+
+ + konoha-1.0+
   you can donwload it from http://www.konohascript.org.
  + konoha packages
-  - class, assignment, json, posix.process, io, subprocess, ntrace, socket are needed.
+  - json, posix, io, subprocess, posix, ntrace, socket are needed.
 
 SIMPLE USAGE:
  We include dclient.k which is a client program for DSE.

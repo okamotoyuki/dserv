@@ -1,4 +1,5 @@
-#!/usr/bin/konoha 
+#!/usr/local/bin/konoha 
+
 /*
  * dserv.k : dse server program
  * written by Shinpei Nakata
