@@ -1,4 +1,4 @@
-/* written by shinpei */
+// written by shinpei
 
 //using konoha.json.*;
 K.import("konoha");
@@ -29,9 +29,9 @@ class DSEProtocolHeader {
 	//@Const int DSCRIPT = 1
 
 	DSEProtocolHeader (int type, int mode) {
-		_type = type;
-		_mode = mode;
-		_contentLength = 0;
+		this.type = type;
+		this.mode = mode;
+		this.contentLength = 0;
 	}
 
 	@Public String dump () {
@@ -40,13 +40,13 @@ class DSEProtocolHeader {
 	
 		// is ready??
 		String header_str = "";
-		if ( 0 <= _type && _type <= 2 && 0<= _mode && _mode <= 3) {
-			header_str = type_string[_type] + " " + mode_string[_mode] + " " + "DSE/0.1" + EOL;
+		if ( 0 <= this.type && this.type <= 2 && 0<= this.mode && this.mode <= 3) {
+			header_str = type_string[this.type] + " " + mode_string[this.mode] + " " + "DSE/0.1" + EOL;
 		} else {
 			// not ready.
 			return  "";
 		}
-		header_str += "Content-Length: " + _contentLength + EOL;
+		header_str += "Content-Length: " + this.contentLength + EOL;
 		header_str += EOL;
 		return header_str;
 	}
@@ -63,34 +63,20 @@ class DTaskRequest {
 
 	DTaskRequest(String name, String script, String mode,
 				 String session_id, String resource,
-				 String logpool_server, String body)
-	{
-		_name = name;
-		_script = script;
-		_mode = mode;
-		_session_id = session_id;
-		_resource = resource;
-		_logpool_server = logpool_server;
-		_body = body;
+				 String logpool_server, String body)	{
+		this.name = name;
+		this.script = script;
+		this.mode = mode;
+		this.session_id = session_id;
+		this.resource = resource;
+		this.logpool_server = logpool_server;
+		this.body = body;
 	}
-
-	/*    @Static DTaskRequest parseJson(Json json) {
-        DTaskRequest req = new DTaskRequest();
-        req.name      = ("name" in? json)      ? json["name"]      : "<name>";
-        req.script    = ("script" in? json)    ? json["script"]    : "konoha";
-        req.mode      = ("mode" in? json)      ? json["mode"]      : "<mode>";
-		req.session_id = ("session_id" in? json)  ? json["session_id"]: DEFAULT_SESSION_ID;
-        req.resource  = ("resource" in? json)  ? json["resource"]  : "<resource>";
-        req.logpool_server   = ("logpool_server" in? json)   ? json["logpool_server"]   : LOGPOOL_DEFAULT_IP;
-        req.body      = ("body" in? json)      ? json["body"]      : "";
-        return req;
-    }
-	*/
 
 	@Public DSEProtocolHeader makeHeader() {
 		Map inverseTypeMap = {dscript: 0, konoha: 1, sh: 2};
 		Map inverseModeMap = {typecheck: 0, monitor: 1, commit: 2, debug: 3};
-		DSEProtocolHeader header = new DSEProtocolHeader(inverseTypeMap[_script], inverseModeMap[_mode]);
+		DSEProtocolHeader header = new DSEProtocolHeader(inverseTypeMap[this.script], inverseModeMap[this.mode]);
 		return header;
 	}
 }
@@ -100,17 +86,17 @@ class DTaskResponse {
 	String message;
 	DTaskRequest req;
 	
-	DTaskResponse(String result, String message, DTaskRequest req)
-	{
-		_result = result;
-		_message = message;
-		_req = req;
+	DTaskResponse(String result, String message, DTaskRequest req)	{
+		this.result = result;
+		this.message = message;
+		this.req = req;
 	}
 
-	/*    Json generateJson() {
+	/*
+	  Json generateJson() {
         Json json = new Json();
-        json["result"]  = _result;
-        if (_message.getSize() > 0) json["message"] = _message;
+        json["result"]  = this.result;
+        if (this.message.getSize() > 0) json["message"] = this.message;
         return json;
     }
 	*/
@@ -130,6 +116,5 @@ class DTaskResponse {
 		}
 	}
 	*/
-	
 }
 

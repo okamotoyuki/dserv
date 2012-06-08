@@ -16,7 +16,7 @@
 
 K.import("konoha");
 
-__VERSION__ = "0.0.2";
+String version = "0.0.2";
 
 class OptionParser {
 	int opts;

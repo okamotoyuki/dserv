@@ -6,31 +6,47 @@
  *
  */
 
-using konoha.io.*;
-using konoha.json.*;
-using konoha.subprocess.*;
-using konoha.ntrace.*;
-using konoha.posix.*;
-using konoha.socket.*;
+K.import("konoha.bytes");
+K.import("konoha.socket");
+K.import("konoha.array");
+K.import("konoha");
+K.import("konoha.pcre");
+K.import("konoha.hashmap");
+K.import("konoha.subproc");
+   //using konoha.io.*;
+   //using konoha.json.*;
+   //using konoha.subprocess.*;
+   //using konoha.ntrace.*;
+   //using konoha.posix.*;
+   //using konoha.socket.*;
 
-DTASK_SCRIPT       = ["dscript", "konoha", "sh"];
-DTASK_MODE         = ["typecheck", "commit", "monitor", "debug"];
+String[] g_dtask_script = new String[0];
+g_dtask_script.add("dscript");
+g_dtask_script.add("konoha")
+g_dtask_script.add("sh");
 
-include "drequest.k";
+String[] g_dtask_mode = new String[0];
+g_dtask_mode.add("typecheck");
+g_dtask_mode.add("commit");
+g_dtask_mode.add("monitor");
+g_dtask_mode.add("debug");
+
+K.load("drequest.k");
 
 // typedefs
-Req = DTaskRequest;
-Res = DTaskResponse;
-DTaskFunc = Func<Req=>Res>;
+//Req = DTaskRequest;
+//Res = DTaskResponse;
+
+//DTaskFunc = Func<Req=>Res>;
 
 
-Res doTypecheck(Req req) {
-	Subprocess s = new Subprocess();
+DTaskResponse doTypecheck(DTaskRequest req) {
+	Subproc s = new Subproc();
 	String script_source = "/tmp/" + req.session_id + ".k";
 	System.ntraceNotice("script_source", {source : script_source});
 	OutputStream ous = new OutputStream(script_source);
 	if (ous == null) {
-		return new Res("error", "cannot create file", req);
+		return new DTaskResponse("error", "cannot create file", req);
 	}
 	ous << req.body << EOL;
 	ous.close();
@@ -51,13 +67,13 @@ Res doTypecheck(Req req) {
 	}
 }
 
-Res doCommit(Req req) {
-	Subprocess s = new Subprocess();
+DTaskRequest doCommit(DTaskRequest req) {
+	Subproc s = new Subproc();
 	String script_source = "/tmp/" + req.session_id + ".k";
 	System.ntraceNotice("script_source", {source : script_source});
 	OutputStream ous = new OutputStream(script_source);
 	if (ous == null) {
-		return new Res("error", "cannot create file");
+		return new DTaskResponse("error", "cannot create file");
 	}
 	ous << req.body << EOL;
 	ous.close();
@@ -87,21 +103,21 @@ Res doCommit(Req req) {
 	print "hoge";
 	if (flagError) {
 		debug( "ERROR!!: " + str_stderr);
-		return new Res("error", str_stderr);
+		return new DTaskResponse("error", str_stderr);
 	} else {
 		OUT << str_stdout << EOL;;
-		return new Res("success", str_stdout);
+		return new DTaskResponse("success", str_stdout);
 	}
 }
 
-Res doMonitor(Req req) {
-	Subprocess s = new Subprocess();
+DTaskResponse doMonitor(DTaskRequest req) {
+	Subproc s = new Subproc();
 	String script_source = "/tmp/" + req.session_id + ".k";
 	System.ntraceNotice("mode", {mode : "monitor-mode"});
 	System.ntraceNotice("script_source", {source : script_source});
 	OutputStream ous = new OutputStream(script_source);
 	if (ous == null) {
-		return new Res("error", "cannot create file");
+		return new DTaskResponse("error", "cannot create file");
 	}
 	ous << req.body << EOL;
 	ous.close();
@@ -130,46 +146,45 @@ Res doMonitor(Req req) {
 	
 	if (flagError) {
 		System.ntraceNotice("errstr", {"errstr": str_stderr, "stdstr": str_stdout});
-		return new Res("error", str_stderr);
+		return new DTaskResponse("error", str_stderr);
 	} else {
 		System.ntraceNotice("errstr", {"errstr": str_stderr, "stdstr": str_stdout});
-		return new Res("success", str_stdout);
+		return new DTaskResponse("success", str_stdout);
 	}
 }
 
 
-Res doDebug(Req req) {
+DTaskResponse doDebug(DTaskRequest req) {
 	// stub
-	return new Res("Not implemented yet","debug mode");
+	return new DTaskResponse("Not implemented yet","debug mode");
 }
 
 
-Map<String,DTaskFunc> task_functions = {
-    typecheck: doTypecheck,
-    commit: doCommit,
-    monitor: doMonitor,
-    debug: doDebug
-};
+Map[DTaskFunc] task_functions = new Map[DTaskFunc]();
+task_functions.set("typecheck", doTypecheck);
+task_functions.set("commit", doCommit);
+task_functions.set("monitor", doMonitor);
+task_functions.set("debug", doDebug);
 
 
-Res process_request(String text) {
+DTaskResponse process_request(String text) {
 	debug(text);
 	Json json = Json.parse(text);
 	String s = json["name"];
 	debug("size=" + text.getSize());
 	debug(s);
-    Req req = Req.parseJson(Json.parse(text));
+    DTaskRequest req = DtaskRequest.parseJson(Json.parse(text));
 	debug( "MODE=" + req.mode);
     if (req.script in? DTASK_SCRIPT == false) {
-        return new Res("failed", "invalid dtask script", req);
+        return new DTaskResponse("failed", "invalid dtask script", req);
     }
     else if (req.mode in? DTASK_MODE == false) {
-        return new Res("failed", "invalid dtask mode", req);
+        return new DTaskResponse("failed", "invalid dtask mode", req);
     }
 
 
 	DTaskFunc task = task_functions[req.mode];
-	Res rs = task(req);
+	DTaskResponse rs = task(req);
 	//	System.ntraceNotice("res", {mode: rs});
 	return rs;
 }
@@ -199,8 +214,7 @@ class DSEServer {
 	}
 }
 
-boolean verifyReqestHeader (String requestText)
-{
+boolean verifyReqestHeader (String requestText) {
 	if (requestText.getSize() == 0) {
 		return false;
 	}
@@ -214,8 +228,7 @@ boolean verifyReqestHeader (String requestText)
 }
 
 
-int main (String[] args)
-{
+int main (String[] args) {
 	DSEServer server = new DSEServer();
 	OUT << "DSE Server: v" + server.printVersion() << EOL;
 
@@ -315,7 +328,7 @@ int main (String[] args)
 
 	debug("Recv data size = " + total_recvsize);
 	
-	Res res = process_request(recvRequestData);
+	DTaskResponse res = process_request(recvRequestData);
 	if (res.req == null) {
 		s.close(servFd); s.close(fd);
 		OUT << "DSE hasn't recv any data" << EOL;
