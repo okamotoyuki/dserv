@@ -1,0 +1,14 @@
+import os
+import glob
+
+cpppath=["-I../include"];
+libs=["-levent"];
+srcdir = "../src/";
+Program('dse',
+[
+	Glob(srcdir + '*.c')
+],
+CFLAGS=["-g3", "-O0"],
+CPPPATH=cpppath,
+LIBS=libs)
+

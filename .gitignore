@@ -1,0 +1,9 @@
+*~
+*.orig
+*.pyc
+GPATH
+GRTAGS
+GTAGS
+*.k.tested
+.cproject
+.project
