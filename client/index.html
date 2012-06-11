@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<title>DSE Client</title>
+	<link rel="shortcut icon" href="favicon.ico" >
+	<link rel="stylesheet" type="text/css" href="css/dse.css"/>
+	<!---- jquery & plugins ---->
+	<script src="js/jquery.js"></script>
+	<!------- my js code ------->
+	<script src="js/main.js"></script>
+	<!-------------------------->
+  </head>
+  <body id="body">
+	<div class="dse-select-mode">
+	  <span>typecheck</span>
+	  <span>monitor</span>
+	  <span>commit</span>
+	  <span>debug</span>
+	</div>
+	<div class="dse-select-script-type">
+	  <span>dscript</span>
+	  <span>konoha</span>
+	  <span>sh</span>
+	</div>
+	<textarea class="dse-script-area">
+using konoha.subprocess.*;
+using konoha.posix.*;
+
+Subprocess s = new Subprocess();
+s.start("dvmstat 1");
+while (true) {
+  System.sleep(1);
+}
+
+</textarea>
+	<div class="dse-submit-button">Submit</div>
+  </body>
+</html>

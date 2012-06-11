@@ -1,0 +1,48 @@
+.dse-select-script-type span {
+	display:inline-block;
+	text-align:center;
+	color: white;
+	width:100px;
+	font-size: 14px;
+	height: 20px;
+	background-color:mediumaquamarine;
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+
+}
+
+.dse-select-mode span {
+	display:inline-block;
+	text-align:center;
+	color: black;
+	width:100px;
+	font-size: 14px;
+	height: 20px;
+	background-color:pink;
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.dse-script-area {
+	margin-top:10px;
+	width:600px;
+	height:600px;
+	display:inline-block;
+	vertical-align:top;
+	font-size: 18px;
+}
+
+.dse-submit-button {
+	margin-top:10px;
+	position:relative;
+	text-align:center;
+	display:inline-block;
+	vertical-align:top;
+	background-color:#c9c9c9;
+	border: 2px double #ffffff;
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+	border-radius: 5px;
+	width:100px;
+}
+
+.dse-submit-button:hover {
+	background-color:#303030;
+}
