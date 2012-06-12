@@ -1,4 +1,7 @@
-var host = "192.168.0.9";
+//var host = "192.168.0.9";
+//var host = "127.0.0.1";
+var host = "localhost";
+var port = "8080";
 var prev_script;
 var prev_mode;
 var script_color_selected = "green";
@@ -8,6 +11,60 @@ var script_color_normal = "mediumaquamarine";
 var mode_color_selected = "hotpink";
 var mode_color_hover = "wheat";
 var mode_color_normal = "pink";
+
+function hookXhr()
+{
+    var xhr = function(){
+        this.readyState = 0; // uninitialized
+        this.responseText = "";
+        this.status = "";
+        this.onreadstatechange = undefined;
+        var xdr = new XDomainRequest();
+
+        xdr.onprogress = function(){
+            var f;
+            this.xhr.readyState = 2; // loaded
+            if( this.xhr && ( f = this.xhr.onreadystatechange ) ){
+                f.apply( this.xhr );
+            }
+        };
+
+        xdr.onload = function(){
+            var f;
+            this.xhr.readyState = 3;    // interactive
+            if( this.xhr && ( f = this.xhr.onreadystatechange ) ){
+                f.apply( this.xhr );
+            }
+            this.xhr.responseText = xdr.responseText;
+            this.xhr.readyState = 4;    // complete
+            this.xhr.status = "200";
+            if( f ){
+                f.apply( this.xhr );
+            }
+        };
+
+        this.open = function( method, url, async ){
+            return xdr.open( method, url, async );
+            readyState = 1;
+        }
+        this.send = function( body ){
+            xdr.send( body );
+        };
+        this.setRequestHeader = function( headerName, headerValue ){
+        };
+        this.getResponseHeader = function( headerName ){
+            if( headerName.match( /^Content\-Type$/i ) ){
+                return xdr.contentType;
+            }else{
+                return "";
+            }
+        };
+        xdr.xhr = this;
+        return this;
+    };
+    return new xhr();
+}
+
 
 $(document).ready(function() {
 	$(".dse-select-script-type span").hover(function() {
@@ -74,10 +131,13 @@ $(document).ready(function() {
 		console.log(prev_script.text());
 		console.log(json);
 		console.log(JSON.stringify(json));
+		console.log(window.XDomainRequest ? true : false);
 		$.ajax({
 			type: 'POST',
-			url: 'http://' + host + '/cgi-bin/drecv.k',
+			//url: 'http://' + host + '/cgi-bin/drecv.k',
+			url: 'http://' + host + ':' + port + '/',
 			data: JSON.stringify(json),
+			xhr: window.XDomainRequest ? hookXhr : undefined,
 			contentType: 'text/plain',
 			success:function(msg) {
 				console.log(msg);
