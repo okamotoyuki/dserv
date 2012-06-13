@@ -2,7 +2,7 @@ import os
 import glob
 
 cpppath=["-I../include"];
-libs=["-levent"];
+libs=["-levent", "-ljansson"];
 srcdir = "../src/";
 Program('dse',
 [

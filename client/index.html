@@ -9,8 +9,8 @@
 	<!---- jquery & plugins ---->
 	<script src="js/jquery.js"></script>
 	<!------- my js code ------->
-	<!--<script src="js/main.js"></script>-->
-	<script src="js/test.js"></script>
+	<script src="js/main.js"></script>
+	<!--<script src="js/test.js"></script>-->
 	<!-------------------------->
   </head>
   <body id="body">
@@ -26,14 +26,17 @@
 	  <span>sh</span>
 	</div>
 	<textarea class="dse-script-area">
-using konoha.subprocess.*;
-using konoha.posix.*;
+K.import("konoha");
+K.import("konoha.bytes");
+K.import("posix.file");
+K.import("konoha.subproc");
 
-Subprocess s = new Subprocess();
-s.start("dvmstat 1");
+Subproc s = new Subproc();
+s.exec("dvmstat 1");
 while (true) {
   System.sleep(1);
 }
+
 
 </textarea>
 	<div class="dse-submit-button">Submit</div>
