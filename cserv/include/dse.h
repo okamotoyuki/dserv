@@ -34,23 +34,6 @@ struct dDserv {
 
 /* ************************************************************************ */
 
-static struct dDserv *dserv_new(void)
-{
-	struct dDserv *dserv = dse_malloc(sizeof(struct dDserv));
-	dserv->base = event_base_new();
-	dserv->httpd = evhttp_new(dserv->base);
-	return dserv;
-}
-
-static void dserv_close(struct dDserv *dserv)
-{
-	evhttp_free(dserv->httpd);
-	event_base_free(dserv->base);
-	dse_free(dserv, sizeof(struct dDserv));
-}
-
-/* ************************************************************************ */
-
 struct dReq {
 	int method;
 	int context;
@@ -182,4 +165,71 @@ static void dse_send_reply(struct evhttp_request *req, struct dRes *dres)
 		break;
 	}
 }
+
+/* ************************************************************************ */
+
+void dump_http_header(struct evhttp_request *req, struct evbuffer *evb, void *ctx)
+{
+	struct evkeyvalq *head = evhttp_request_get_input_headers(req);
+	struct evkeyval *entry;
+	TAILQ_FOREACH(entry, head, next) {
+		evbuffer_add_printf(evb, "%s:%s<br>", entry->key, entry->value);
+	}
+	evhttp_add_header(req->output_headers, "Access-Control-Allow-Origin", "http://localhost:8080/");
+	evhttp_add_header(req->output_headers, "Access-Control-Max-Age", "6238800");
+	evhttp_add_header(req->output_headers, "Access-Control-Allow-Method", "POST");
+
+	evhttp_send_reply(req, HTTP_OK, "OK", evb);
+}
+
+// request handler for DSE Protocol
+void dse_req_handler (struct evhttp_request *req, void *arg)
+{
+	struct evbuffer *body = evhttp_request_get_input_buffer(req);
+	size_t len = evbuffer_get_length(body);
+	if (req->type == EVHTTP_REQ_GET) {
+		evhttp_send_error(req, HTTP_BADREQUEST, "DSE server doesn't accept GET request");
+	} else if(req->type == EVHTTP_REQ_POST) {
+		// now, we fetch key values
+		unsigned char *requestLine;
+		requestLine = evbuffer_pullup(body, -1);
+		requestLine[len] = '\0';
+		//now, parse json.
+		struct dReq *dreq = dse_parseJson((const char*)requestLine);
+		struct dRes *dres = dse_dispatch(dreq);
+		dse_send_reply(req, dres);
+		//evbuffer_add_printf(buf, "Reqested POSPOS: %s\n", evhttp_request_uri(req));
+		//evhttp_send_reply(req, HTTP_OK, "OK", buf);
+	}
+	else{
+		evhttp_send_error(req, HTTP_BADREQUEST, "Available POST only");
+	}
+}
+static struct dDserv *dserv_new(void)
+{
+	struct dDserv *dserv = dse_malloc(sizeof(struct dDserv));
+	dserv->base = event_base_new();
+	dserv->httpd = evhttp_new(dserv->base);
+	return dserv;
+}
+
+static int dserv_start(struct dDserv *dserv, const char *addr, int ip)
+{
+	if (evhttp_bind_socket(dserv->httpd, addr, ip) < 0){
+		perror("evhttp_bind_socket");
+		exit(EXIT_FAILURE);
+	}
+	evhttp_set_gencb(dserv->httpd, dse_req_handler, NULL);
+	event_base_dispatch(dserv->base);
+	return 0;
+}
+
+
+static void dserv_close(struct dDserv *dserv)
+{
+	evhttp_free(dserv->httpd);
+	event_base_free(dserv->base);
+	dse_free(dserv, sizeof(struct dDserv));
+}
+
 #endif /* DSE_H_ */

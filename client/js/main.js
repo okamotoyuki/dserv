@@ -45,7 +45,7 @@ $(document).ready(function() {
 
 	$(".dse-select-mode span").each(function() {
 		var text = $(this).text();
-		if (text == "tycheck") {
+		if (text == "eval") {
 			prev_mode = $(this);
 			$(this).css({backgroundColor:mode_color_selected});
 		}
