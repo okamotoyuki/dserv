@@ -39,7 +39,6 @@ struct dReq {
 	int context;
 	int taskid;
 	char logpoolip[16];
-	char *script;
 	char *scriptfilepath;
 };
 
@@ -56,6 +55,8 @@ enum {
 	E_STATUS_OK,
 };
 
+#define DSE_FILEPATH_SIZE 128
+
 static struct dReq *newDReq()
 {
 	struct dReq *ret = (struct dReq *)malloc(sizeof(struct dReq));
@@ -63,20 +64,33 @@ static struct dReq *newDReq()
 	ret->context = 0;
 	ret->taskid = 0;
 	memset(ret->logpoolip, 16, 0);
-	ret->script = NULL;
-	ret->scriptfilepath = (char*)malloc(128);
+	ret->scriptfilepath = (char*)dse_malloc(DSE_FILEPATH_SIZE);
 	memset(ret->scriptfilepath, 128, 0);
 	return ret;
 }
 
+static void deleteDReq(struct dReq *req)
+{
+	if (req == NULL) return;
+	dse_free(req->scriptfilepath, DSE_FILEPATH_SIZE);
+	dse_free(req, sizeof(struct dReq));
+}
+
 static struct dRes *newDRes()
 {
-	struct dRes *ret = (struct dRes *)malloc(sizeof(struct dRes));
+	struct dRes *ret = (struct dRes *)dse_malloc(sizeof(struct dRes));
 	ret->taskid = 0;
 	ret->status = 0;
 	ret->status_detail = NULL;
 	ret->status_symbol = NULL;
 	return ret;
+}
+
+static void deleteDRes (struct dRes *res)
+{
+	// check if satus_* is set
+	if (res == NULL) return;
+	dse_free(res, sizeof(struct dRes));
 }
 
 
@@ -187,6 +201,8 @@ void dse_req_handler (struct evhttp_request *req, void *arg)
 {
 	struct evbuffer *body = evhttp_request_get_input_buffer(req);
 	size_t len = evbuffer_get_length(body);
+	struct dReq *dreq = NULL;
+	struct dRes *dres = NULL;
 	if (req->type == EVHTTP_REQ_GET) {
 		evhttp_send_error(req, HTTP_BADREQUEST, "DSE server doesn't accept GET request");
 	} else if(req->type == EVHTTP_REQ_POST) {
@@ -195,15 +211,18 @@ void dse_req_handler (struct evhttp_request *req, void *arg)
 		requestLine = evbuffer_pullup(body, -1);
 		requestLine[len] = '\0';
 		//now, parse json.
-		struct dReq *dreq = dse_parseJson((const char*)requestLine);
-		struct dRes *dres = dse_dispatch(dreq);
+		dreq = dse_parseJson((const char*)requestLine);
+		dres = dse_dispatch(dreq);
 		dse_send_reply(req, dres);
 		//evbuffer_add_printf(buf, "Reqested POSPOS: %s\n", evhttp_request_uri(req));
 		//evhttp_send_reply(req, HTTP_OK, "OK", buf);
+
 	}
 	else{
 		evhttp_send_error(req, HTTP_BADREQUEST, "Available POST only");
 	}
+	deleteDReq(dreq);
+	deleteDRes(dres);
 }
 static struct dDserv *dserv_new(void)
 {
