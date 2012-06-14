@@ -14,28 +14,29 @@
 	<!-------------------------->
   </head>
   <body id="body">
-	<div class="dse-select-mode">
-	  <span>typecheck</span>
-	  <span>monitor</span>
-	  <span>commit</span>
-	  <span>debug</span>
+	Method:<div class="dse-select-mode">
+	  <span>tycheck</span>
+	  <span>eval</span>
 	</div>
-	<div class="dse-select-script-type">
+	Type:<div class="dse-select-script-type">
 	  <span>dscript</span>
 	  <span>konoha</span>
 	  <span>sh</span>
 	</div>
 	<textarea class="dse-script-area">
-K.import("konoha");
 K.import("konoha.bytes");
-K.import("posix.file");
 K.import("konoha.subproc");
 
-Subproc s = new Subproc();
-s.exec("dvmstat 1");
-while (true) {
-  System.sleep(1);
+void f () {
+        Subproc s = Subproc.new("", false);
+        s.enableShellmode(false);
+        //s.enableShellmode(true);
+        String str = s.exec("echo $HOME");
+        
+        p(str);
 }
+
+f();
 
 
 </textarea>

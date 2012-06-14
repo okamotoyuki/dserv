@@ -45,7 +45,7 @@ $(document).ready(function() {
 
 	$(".dse-select-mode span").each(function() {
 		var text = $(this).text();
-		if (text == "typecheck") {
+		if (text == "tycheck") {
 			prev_mode = $(this);
 			$(this).css({backgroundColor:mode_color_selected});
 		}
@@ -87,7 +87,7 @@ $(document).ready(function() {
 		$.ajax({
 			type: 'POST',
 			//url: 'http://' + host + '/cgi-bin/drecv.k',
-			url: 'http://' + host + '' + port + '/',
+			url: 'http://' + host + '' + port,
 			data: JSON.stringify(json),
 			contentType: 'text/plain',
 			success:function(msg) {
