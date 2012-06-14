@@ -25,14 +25,19 @@
 /* ************************************************************************ */
 #ifndef DSE_H_
 #define DSE_H_
-#include "dse_util.h"
+
+#include <event.h>
+#include <evhttp.h>
+#include <event2/buffer.h>
+#include <sys/queue.h>
+#include <jansson.h>
 #include <konoha2/konoha2.h>
+#include "dse_util.h"
 struct dDserv {
 	struct event_base *base;
 	struct evhttp *httpd;
 };
 
-/* ************************************************************************ */
 
 struct dReq {
 	int method;

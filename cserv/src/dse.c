@@ -26,11 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <event.h>
-#include <evhttp.h>
-#include <event2/buffer.h>
-#include <sys/queue.h>
-#include <jansson.h>
+
 #include "../include/dse.h"
 
 #define HTTPD_ADDR "0.0.0.0"
