@@ -153,28 +153,27 @@ static void eval_actor_exit(Actor *a) { /* do nothing */ }
 
 static int eval_actor_act(Actor *a, Message *message)
 {
-    if (JSON_type(message) == JSON_String) {
+	if (JSON_type(message) == JSON_String) {
 		char *filepath = JSONString_get(a->self, 6);
 		filepath[5] = '\0';
 		konoha_t konoha = konoha_open();
 		int ret = konoha_load(konoha, filepath);
 		konoha_close(konoha);
 	}
-    return 0;
+	return 0;
 }
 
 static const struct actor_api eval_actor_api = {
-    eval_actor_act,
-    eval_actor_init,
-    eval_actor_exit
+	eval_actor_act,
+	eval_actor_init,
+	eval_actor_exit
 };
 
 static void eval_actor(struct dReq *req)
 {
-    if (ActorStage_init(4, 4)) {
-        fprintf(stderr, "ActorStage initialization failed.\n");
-        return 1;
-    }
+	if (ActorStage_init(1, 1)) {
+		D_("ActorStageinit, failed");
+	}
 
 	JSON message = JSONInt_new(1);
 	Actor *a = Actor_new(message, &eval_actor_api);
