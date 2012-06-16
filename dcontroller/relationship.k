@@ -31,7 +31,7 @@ class Relationship {
 		data = p.get("data");
 		//p(self);
 		String relidx = this.self.substring(url.getSize(), this.self.getSize() - url.getSize() + 1);
-		this.idx = relidx.toInt();
+		this.idx = relidx;
 		//p(idx);
 		//p(start); p(end); p(self);
 		//p(property); p(properties); p(type);
