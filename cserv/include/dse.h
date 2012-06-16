@@ -181,9 +181,45 @@ static struct dReq *dse_parseJson(const char *input)
 //	Actor_send(a, JSONString_new(req->scriptfilepath, strlen(req->scriptfilepath)));
 //}
 
+static const char* _packname(const char *str)
+{
+	char *p = strrchr(str, '.');
+	return (p == NULL) ? str : (const char*)p+1;
+}
+
+static const char* _packagepath(char *buf, size_t bufsiz, const char *fname)
+{
+	char *path = getenv("KONOHA_PACKAGEPATH"), *local = "";
+	if(path == NULL) {
+		path = getenv("KONOHA_HOME");
+		local = "/package";
+	}
+	if(path == NULL) {
+		path = getenv("HOME");
+		local = "/.konoha2/package";
+	}
+	snprintf(buf, bufsiz, "%s%s/%s/%s_glue.k", path, local, fname, _packname(fname));
+#ifdef K_PREFIX
+	FILE *fp = fopen(buf, "r");
+	if(fp != NULL) {
+		fclose(fp);
+	}
+	else {
+		snprintf(buf, bufsiz, K_PREFIX "/konoha2/package" "/%s/%s_glue.k", fname, _packname(fname));
+	}
+#endif
+	return (const char*)buf;
+}
+
+
 static struct dRes *dse_dispatch(struct dReq *req)
 {
-	konoha_t konoha = konoha_open();
+	kplatform_t dse = {
+		.name = "dse",
+		.stacksize = 4096, 
+		.packagepath = _packagepath,
+	};
+	konoha_t konoha = konoha_open(&dse);
 	int ret;
 	D_("scriptpath:%s", req->scriptfilepath);
 	struct dRes *dres = newDRes();
@@ -278,10 +314,10 @@ static int dserv_start(struct dDserv *dserv, const char *addr, int ip)
 		exit(EXIT_FAILURE);
 	}
 	evhttp_set_gencb(dserv->httpd, dse_req_handler, NULL);
+
 	event_base_dispatch(dserv->base);
 	return 0;
 }
-
 
 static void dserv_close(struct dDserv *dserv)
 {
