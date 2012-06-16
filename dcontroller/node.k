@@ -40,7 +40,7 @@ class Node {
 		this.all_rel = p.getString("all_relationships");
 		this.incoming_typed_rel = p.getString("incoming_typed_relationhip");
 		String nodeidx = this.self.substring(url.getSize() + 1, this.self.getSize() - url.getSize() + 1);
-		this.idx = nodeidx.toInt();
+		this.idx = nodeidx;
 	}
 
 	Relationship relationshipTo(Node n, String type) {
