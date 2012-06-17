@@ -139,8 +139,16 @@ static struct dReq *dse_parseJson(const char *input)
 	strncpy(filename, str_context, context_len);
 	strncat(filename, ".k", context_len + 2);
 	FILE *fp = fopen(filename, "w");
-	const char *str_script= json_string_value(script);
+	char *str_script= json_string_value(script);
+	// replace "'" --> "\"";
 	size_t script_len = strlen(str_script);
+	char ch;
+	int idx = 0;
+	for (idx = 0; idx < script_len; idx++) {
+		if (str_script[idx] == '\'') {
+			str_script[idx] ='"';
+		}
+	}
 	fwrite(str_script, script_len, 1, fp);
 	fflush(fp);
 	fclose(fp);
