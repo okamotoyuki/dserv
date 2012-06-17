@@ -2,10 +2,10 @@
  * written by motoki yoan
  */
 
-K.import("konoha");
 K.import("konoha.string");
 K.import("konoha.curl");
 K.import("konoha.json");
+K.import("konoha");
 
 /* ----------------------------------------------------------------- */
 /* [internal method] */

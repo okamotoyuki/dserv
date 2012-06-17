@@ -1,6 +1,6 @@
 K.import("konoha.curl");
 
-Json createDTaskJsonData(Node currentNode) {
+Json createJsonData(Node currentNode) {
 	String tid = "taskid";
 	String type = "type";
 	String ctx = "context";
@@ -11,7 +11,7 @@ Json createDTaskJsonData(Node currentNode) {
 	Json sdata = new Json();
 	sdata.setString(tid, currentNode.getPropertyString(tid));
 	sdata.setString(type, currentNode.getPropertyString(type));
-	sdata.setString(ctx, "1"); // FIXME
+	sdata.setString(ctx, currentNode.getPropertyString(tid)); // FIXME
 	sdata.setString(mth, "eval");
 	sdata.setString(lp, "192.168.0.5");
 	p(currentNode.getPropertyString(scr));
@@ -38,7 +38,7 @@ void postToDse(Json field) {
 	return;
 }
 
-void sendEachNode(Node currentNode) {
+void sendNode(Node currentNode) {
 	Json sdata;
 	Json[] rss;
 	String rsName;
@@ -51,22 +51,20 @@ void sendEachNode(Node currentNode) {
 	p("Relationship..." + rsName);
 	if(flowType == "startEvent") {
 		next = currentNode.getEndNode(rsName);
-		sendEachNode(next);
+		sendNode(next);
 		return;
 	}
-	sdata = createDTaskJsonData(currentNode);
+	sdata = createJsonData(currentNode);
 	postToDse(sdata);
 	next = currentNode.getEndNode(rsName);
-	sendEachNode(next);
+	sendNode(next);
 	return;
 }
 
 void sendNodes(int startIdx) {
 // create DB
 	GraphDatabaseService db = new GraphDatabaseService("http://localhost", 7474);
-
 	p("Getting...rootNode");
 	Node currentNode = db.getNode(startIdx);
-
-	sendEachNode(currentNode);
+	sendNode(currentNode);
 }
