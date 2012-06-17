@@ -147,7 +147,10 @@ static struct dReq *dse_parseJson(const char *input)
 	for (idx = 0; idx < script_len; idx++) {
 		if (str_script[idx] == '\'') {
 			str_script[idx] ='"';
+		} else if (str_script[idx] == '@') {
+			str_script[idx] = '\n';
 		}
+
 	}
 	fwrite(str_script, script_len, 1, fp);
 	fflush(fp);
