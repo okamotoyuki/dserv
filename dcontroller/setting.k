@@ -1,9 +1,14 @@
-String getDse() {
+String getDseHost() {
 	String host = "localhost";
 	return host;
 }
 
-String getPort()
+String getDsePort()
 	String port = "/dse/command/";
 	return port;
+}
+
+String getStartNodeIdx() {
+	int startIdx = 0;
+	return startIdx;
 }
