@@ -137,7 +137,7 @@ static struct dReq *dse_parseJson(const char *input)
 	const char *str_context = json_string_value(context);
 	size_t context_len = strlen(str_context);
 	strncpy(filename, str_context, context_len);
-	strncat(filename, ".k", context_len + 2);
+	snprintf(filename, context_len+2, "%s.k", str_context);
 	FILE *fp = fopen(filename, "w");
 	char *str_script= json_string_value(script);
 	// replace "'" --> "\"";
