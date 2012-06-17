@@ -1,4 +1,5 @@
 K.import("konoha.curl");
+K.load("setting.k");
 
 Json createJsonData(Node currentNode) {
 	String tid = "taskid";
@@ -22,8 +23,8 @@ Json createJsonData(Node currentNode) {
 
 void postToDse(Json field) {
 	Curl c = new Curl();
-	String host = "localhost";
-	String port = "/dse/command/";
+	String host = getDseHost();
+	String port = getDsePort();
 	String url = "http://" + host + port;
 	p("URL..." + url);
 	String request = field.dump();
