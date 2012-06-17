@@ -1,4 +1,3 @@
-K.import("konoha");
 K.load("neo4j.k");
 
 void main() {

@@ -1,6 +1,6 @@
 dcontroller
 
-When you execute dcontroller.k, you must set nodes to neo4j database.
+When you execute dcontroller.k, you must set nodes to neo4j database at first.
 
 Please type fllowing command.
 
@@ -8,19 +8,22 @@ konoha ./set.k
 
 Please remember the number(*) output on your terminal.
 
-The operation mentioned above is not enough to set nodes.
+Please rewrite dcontroller.k as fllowing line.
 
-Please execute following operation.
+if the number(*) is '3'...
 
-1. Open the neo4j page on your browser.
 
-2. Click "Data browser".
+K.load("neo4j.k");
+K.load("send.k");
 
-3. Recall the number(*) and input it to search space.
+void main() {
+	sendNodes(354); -> sendNodes(3);
+}
 
-4. Click upper right button.
+main();
 
-5. Replace "startEve" to "startEvent".
+
+You finished setting nodes to neo4j.
 
 Please start dse server and type fllowing command.
 
@@ -28,7 +31,7 @@ konoha ./dcontroller.k
 
 If the terminal you started dse server output fllowing message, you succeeded!!
 
-scriptpath:1.k
-- (1.k:1) 1
-scriptpath:1.k
-- (1.k:1) 2
+scriptpath:30.k
+- (30.k:1) 1
+scriptpath:31.k
+- (31.k:1) 2
