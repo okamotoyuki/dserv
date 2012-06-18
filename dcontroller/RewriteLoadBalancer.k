@@ -34,6 +34,9 @@ void recover() {
 
 	//	Subproc s = new Subproc("sudo service httpd restart");
 	//	s.fg();
+
+	Subproc log = new Subproc("logger TaskDone", false);
+	log.fg();
 }
 
 
