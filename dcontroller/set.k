@@ -1,4 +1,26 @@
+K.import("konoha.bytes");
+K.import("posix.file");
 K.load("neo4j.k");
+
+String getRecoveryScript(String scriptname) {
+	FILE f = System.fopen(scriptname, "r");
+	int bufsize = 256 * 256;
+	Bytes buf = Bytes.new(bufsize);
+	int ret = bufsize;
+	String str = "";
+	while(ret == bufsize) {
+		buf.setAll(0); // zero clear
+		ret = f.read(buf, 0, bufsize);
+		if (ret < bufsize) {
+			String tmp = buf.toString();
+			str = str + tmp.substring(0, ret);
+		} else {
+			str = str + buf.toString();
+		}
+	}
+//	p(str);
+	return str;
+}
 
 void main() {
 // create DB
@@ -12,6 +34,7 @@ void main() {
 	String scr = "script";
 
 	int startIdx;
+	String script = getRecoveryScript("RewriteLoadBalancer.k");
 
 // create Node1: startEvent
 	Node startEvent = db.createNode();
@@ -36,6 +59,7 @@ void main() {
 	dTask2.setPropertyString(ft, "dTask");
 	dTask2.setPropertyString(fn, "recoveryA");
 	dTask2.setPropertyString(tid, "31"); // to dTask2.setPropertyInt(tid, 30);
+//	dTask2.setPropertyString(scr, script);
 	dTask2.setPropertyString(scr, "p(2);");
 
 // create Node4: endEvent
