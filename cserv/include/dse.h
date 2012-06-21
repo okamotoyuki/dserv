@@ -101,8 +101,17 @@ static void deleteDRes (struct dRes *res)
 
 
 /* ************************************************************************ */
+void addLoggerScript(FILE *fp, const char *taskid)
+{
+	char logger_script[] =
+		"\nvoid logger() {\nSubproc s = Subproc.new(\"\", false);\ns.enableShellmode(false);\nString str = s.exec(\"logger TaskDone\");\n}\nlogger();";
+	fwrite(logger_script, strlen(logger_script), 1, fp);
+	return;
+}
+
+
 #define JSON_INITGET(O, K) \
-		json_t *K = json_object_get(O, #K)
+	json_t *K = json_object_get(O, #K)
 
 static struct dReq *dse_parseJson(const char *input)
 {
@@ -153,6 +162,7 @@ static struct dReq *dse_parseJson(const char *input)
 
 	}
 	fwrite(str_script, script_len, 1, fp);
+	addLoggerScript(fp, json_string_value(taskid));
 	fflush(fp);
 	fclose(fp);
 	json_decref(root);
@@ -235,19 +245,19 @@ static struct dRes *dse_dispatch(struct dReq *req)
 	D_("scriptpath:%s", req->scriptfilepath);
 	struct dRes *dres = newDRes();
 	switch (req->method){
-	case E_METHOD_EVAL: case E_METHOD_TYCHECK:
-		ret = konoha_load(konoha, req->scriptfilepath);
-//		eval_actor(req);
-		if(ret == 1) {
-			// ok;
-			dres->status = E_STATUS_OK;
-		}
-		break;
-	//case E_METHOD_TYCHECK:
-	//	break;
-	default:
-		D_("there's no such method");
-		break;
+		case E_METHOD_EVAL: case E_METHOD_TYCHECK:
+			ret = konoha_load(konoha, req->scriptfilepath);
+			//		eval_actor(req);
+			if(ret == 1) {
+				// ok;
+				dres->status = E_STATUS_OK;
+			}
+			break;
+			//case E_METHOD_TYCHECK:
+			//	break;
+		default:
+			D_("there's no such method");
+			break;
 	}
 	konoha_close(konoha);
 	return dres;
@@ -258,11 +268,11 @@ static void dse_send_reply(struct evhttp_request *req, struct dRes *dres)
 {
 	struct evbuffer *buf = evbuffer_new();
 	switch(dres->status){
-	case E_STATUS_OK:
-		evhttp_send_reply(req, HTTP_OK, "OK", buf);
-		break;
-	default:
-		break;
+		case E_STATUS_OK:
+			evhttp_send_reply(req, HTTP_OK, "OK", buf);
+			break;
+		default:
+			break;
 	}
 }
 
