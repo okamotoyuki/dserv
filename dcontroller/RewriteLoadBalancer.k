@@ -32,8 +32,9 @@ void recover() {
 	f2.write(str.toBytes(), 0, len);
 	f2.close();
 
-	//	Subproc s = new Subproc("sudo service httpd restart");
-	//	s.fg();
+	// need sudo. please make user 'dse' with no password, and run dse as 'dse' user
+	//Subproc s = new Subproc("sudo service httpd restart", false);
+	//s.fg();
 
 	Subproc log = new Subproc("logger TaskDone", false);
 	log.fg();
