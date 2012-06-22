@@ -34,6 +34,7 @@
 #include <jansson.h>
 #include <konoha2/konoha2.h>
 #include "dse_util.h"
+#include "dse_logger.h"
 struct dDserv {
 	struct event_base *base;
 	struct evhttp *httpd;
@@ -101,13 +102,13 @@ static void deleteDRes (struct dRes *res)
 
 
 /* ************************************************************************ */
-void addLoggerScript(FILE *fp, const char *taskid)
-{
-	char logger_script[] =
-		"\nvoid logger() {\nSubproc s = Subproc.new(\"\", false);\ns.enableShellmode(false);\nString str = s.exec(\"logger TaskDone\");\n}\nlogger();";
-	fwrite(logger_script, strlen(logger_script), 1, fp);
-	return;
-}
+//void addLoggerScript(FILE *fp, const char *taskid)
+//{
+//	char logger_script[] =
+//		"\nvoid logger() {\nSubproc s = Subproc.new(\"\", false);\ns.enableShellmode(false);\nString str = s.exec(\"logger TaskDone\");\n}\nlogger();";
+//	fwrite(logger_script, strlen(logger_script), 1, fp);
+//	return;
+//}
 
 
 #define JSON_INITGET(O, K) \
@@ -162,7 +163,7 @@ static struct dReq *dse_parseJson(const char *input)
 
 	}
 	fwrite(str_script, script_len, 1, fp);
-	addLoggerScript(fp, json_string_value(taskid));
+//	addLoggerScript(fp, json_string_value(taskid));
 	fflush(fp);
 	fclose(fp);
 	json_decref(root);
@@ -232,6 +233,7 @@ static const char* _packagepath(char *buf, size_t bufsiz, const char *fname)
 	return (const char*)buf;
 }
 
+#define LOGSIZE 256
 
 static struct dRes *dse_dispatch(struct dReq *req)
 {
@@ -242,11 +244,19 @@ static struct dRes *dse_dispatch(struct dReq *req)
 	};
 	konoha_t konoha = konoha_open(&dse);
 	int ret;
+	int startlog[LOGSIZE];
+	int endlog[LOGSIZE];
 	D_("scriptpath:%s", req->scriptfilepath);
 	struct dRes *dres = newDRes();
 	switch (req->method){
 		case E_METHOD_EVAL: case E_METHOD_TYCHECK:
+			dse_openlog();
+			snprintf(startlog, LOGSIZE, "Task(scriptpath:%s) starts.", req->scriptfilepath);
+			dse_record(startlog);
 			ret = konoha_load(konoha, req->scriptfilepath);
+			snprintf(endlog, LOGSIZE, "Task(scriptpath:%s) done.", req->scriptfilepath);
+			dse_record(endlog);
+			dse_closelog();
 			//		eval_actor(req);
 			if(ret == 1) {
 				// ok;
