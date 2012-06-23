@@ -39,9 +39,11 @@ extern "C" {
 int main (int argc, char **av)
 {
 	struct dDserv *dserv = NULL;
+	dse_logpool_init();
 	dserv = dserv_new();
 	dserv_start(dserv, HTTPD_ADDR, HTTPD_PORT);
 	dserv_close(dserv);
+	dse_logpool_exit();
 	return 0;
 }
 

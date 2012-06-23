@@ -243,6 +243,8 @@ static struct dRes *dse_dispatch(struct dReq *req)
 		.packagepath = _packagepath,
 	};
 	konoha_t konoha = konoha_open(&dse);
+	logpool_t *lp;
+	void *logpool_args;
 	int ret;
 	int startlog[LOGSIZE];
 	int endlog[LOGSIZE];
@@ -250,13 +252,16 @@ static struct dRes *dse_dispatch(struct dReq *req)
 	struct dRes *dres = newDRes();
 	switch (req->method){
 		case E_METHOD_EVAL: case E_METHOD_TYCHECK:
-			dse_openlog();
-			snprintf(startlog, LOGSIZE, "Task(scriptpath:%s) starts.", req->scriptfilepath);
-			dse_record(startlog);
+			lp = dse_openlog();
+			dse_record(lp, &logpool_args, req->scriptfilepath,
+					KEYVALUE_s("status", "startting"),
+					LOG_END);
 			ret = konoha_load(konoha, req->scriptfilepath);
-			snprintf(endlog, LOGSIZE, "Task(scriptpath:%s) done.", req->scriptfilepath);
-			dse_record(endlog);
-			dse_closelog();
+			dse_record(lp, &logpool_args, req->scriptfilepath,
+					KEYVALUE_s("status", "done"),
+					LOG_END);
+
+			dse_closelog(lp);
 			//		eval_actor(req);
 			if(ret == 1) {
 				// ok;
