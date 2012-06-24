@@ -47,7 +47,7 @@ static void dse_logpool_init(void) {
 
 logpool_t *dse_openlog(char *ip)
 {
-	logpool_t *lp = logpool_open_trace(NULL, "0.0.0.0", 14801);
+	logpool_t *lp = logpool_open_trace(NULL, ip, 14801);
 	return lp;
 }
 
