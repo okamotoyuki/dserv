@@ -24,7 +24,15 @@
 
 /* ************************************************************************ */
 
+#include <sys/time.h>
 #include <logpool.h>
+
+int getTime(void)
+{
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	return (int)((int)t.tv_sec * 1000 * 1000 + (int)t.tv_usec);
+}
 
 #define LOG_END 0
 #define LOG_s   1
@@ -33,26 +41,27 @@
 #define KEYVALUE_u(K,V)    LOG_u, (K), ((uintptr_t)V)
 #define KEYVALUE_s(K,V)    LOG_s, (K), (V)
 
-void dse_logpool_init(void) {
+static void dse_logpool_init(void) {
 	logpool_init(LOGPOOL_TRACE);
 }
 
-logpool_t *dse_openlog(void)
+logpool_t *dse_openlog(char *ip)
 {
 	logpool_t *lp = logpool_open_trace(NULL, "0.0.0.0", 14801);
 	return lp;
 }
 
-void dse_closelog(logpool_t *lp)
+static void dse_closelog(logpool_t *lp)
 {
 	logpool_close(lp);
 }
 
-void dse_logpool_exit()
+static void dse_logpool_exit()
 {
 	logpool_exit();
 }
 
 #define dse_record(lp, args, trace_id, ...) \
 	logpool_record(lp, args, LOG_NOTICE, trace_id, \
+			KEYVALUE_u("time", getTime()), \
 			__VA_ARGS__)

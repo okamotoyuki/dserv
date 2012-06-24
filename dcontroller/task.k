@@ -38,5 +38,6 @@ class Task {
 		c.setOpt(CURLOPT_POSTFIELDS, req);
 		c.setOpt(CURLOPT_WRITEDATA, res);
 		c.perform();
+		return;
 	}
 }
