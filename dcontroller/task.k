@@ -40,4 +40,9 @@ class Task {
 		c.perform();
 		return;
 	}
+
+	void sync(int context) {
+		// syncronize
+		return;
+	}
 }
