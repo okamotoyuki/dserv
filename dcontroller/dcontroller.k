@@ -1,9 +1,10 @@
-K.load("neo4j.k");
-K.load("send.k");
+K.load("task.k");
 K.load("setting.k");
 
 void main() {
-	sendNodes(getStartNodeIdx());
+	Task t1 = new Task(1, "hoge", 1, "eval", "0.0.0.0", "p(1);");
+	t1.sendTo(getDseHost(), getDsePort());
+	return;
 }
 
 main();
