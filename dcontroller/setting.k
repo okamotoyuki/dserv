@@ -1,14 +1,4 @@
-String getDseHost() {
-	String host = "localhost";
-	return host;
-}
-
-String getDsePort() {
-	String port = "/dse/command/";
-	return port;
-}
-
-int getStartNodeIdx() {
-	int startIdx = 354;
-	return startIdx;
+String getLogPoolIP() {
+	String logpoolip = "192.168.0.2";
+	return logpoolip;
 }
