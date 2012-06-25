@@ -42,7 +42,7 @@ int getTime(void)
 #define KEYVALUE_s(K,V)    LOG_s, (K), (V)
 
 static void dse_logpool_init(void) {
-	logpool_init(LOGPOOL_TRACE);
+	logpool_global_init(LOGPOOL_TRACE);
 }
 
 logpool_t *dse_openlog(char *ip)
@@ -58,7 +58,7 @@ static void dse_closelog(logpool_t *lp)
 
 static void dse_logpool_exit()
 {
-	logpool_exit();
+	logpool_global_exit();
 }
 
 #define dse_record(lp, args, trace_id, ...) \
