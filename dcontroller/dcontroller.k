@@ -4,12 +4,16 @@ K.load("fileReader.k");
 
 void main() {
 	String logpoolip = getLogPoolIP();
-	String monitorScript = readFile("./monitor.k");
-	Task monitor = new Task(1, "monitor", 1, "eval", logpoolip, monitorScript);
-	Task recovery = new Task(2, "recovery", 2, "eval", logpoolip, "p(2);");
-	monitor.sendTo("192.168.0.151", "/dse/command/");
-	monitor.sync(1);
-	recovery.sendTo("192.168.0.151","/dse/command/");
+	String monitor = readFile("./monitor.k");
+	String recovery1 = readFile("./httpdRestart.k");
+	String recovery2 = readFile("./mysqldRestart.k");
+	Task resourceMonitor = new Task(1, "resourceMonitor", 1, "eval", logpoolip, monitor);
+	Task httpdRestart = new Task(2, "httpdRestart", 2, "eval", logpoolip, recovery1);
+	Task mysqldRestart = new Task(3, "mysqldRestart", 3, "eval", logpoolip, recovery2);
+	resourceMonitor.sendTo("192.168.0.151", "/dse/command/");
+//	resourceMonitor.sync(1);
+//	httpdRestart.sendTo("192.168.0.151","/dse/command/");
+//	mysqldRestart.sendTo("192.168.0.151", "/dse/commnd/");
 	return;
 }
 
