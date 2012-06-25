@@ -238,6 +238,18 @@ static const char* _packagepath(char *buf, size_t bufsiz, const char *fname)
 	return (const char*)buf;
 }
 
+static const char* _exportpath(char *pathbuf, size_t bufsiz, const char *pname)
+{
+	char *p = strrchr(pathbuf, '/');
+	snprintf(p, bufsiz - (p  - pathbuf), "/%s_exports.k", _packname(pname));
+	FILE *fp = fopen(pathbuf, "r");
+	if(fp != NULL) {
+		fclose(fp);
+		return (const char*)pathbuf;
+	}
+	return NULL;
+}
+
 #define LOGSIZE 256
 
 static struct dRes *dse_dispatch(struct dReq *req)
@@ -253,6 +265,7 @@ static struct dRes *dse_dispatch(struct dReq *req)
 		.feof = feof,
 		.fclose = fclose,
 		.packagepath = _packagepath,
+		.exportpath = _exportpath,
 	};
 	konoha_t konoha = konoha_open(&dse);
 	logpool_t *lp;
