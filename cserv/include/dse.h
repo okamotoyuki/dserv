@@ -245,6 +245,13 @@ static struct dRes *dse_dispatch(struct dReq *req)
 	kplatform_t dse = {
 		.name = "dse",
 		.stacksize = 4096, 
+		.malloc = malloc,
+		.free = free,
+		.realpath = realpath,
+		.fopen = fopen,
+		.fgetc = fgetc,
+		.feof = feof,
+		.fclose = fclose,
 		.packagepath = _packagepath,
 	};
 	konoha_t konoha = konoha_open(&dse);
