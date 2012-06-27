@@ -31,7 +31,8 @@ int getTime(void)
 {
 	struct timeval t;
 	gettimeofday(&t, NULL);
-	return (int)((int)t.tv_sec * 1000 * 1000 + (int)t.tv_usec);
+	printf("%d[s] %d[us]\n", (int)t.tv_sec % 1000, (int)t.tv_usec);
+	return (int)(((int)t.tv_sec % 1000) * 1000 * 1000 + (int)t.tv_usec);
 }
 
 #define LOG_END 0

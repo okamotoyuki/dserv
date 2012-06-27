@@ -72,7 +72,7 @@ $(document).ready(function() {
 			"type" : prev_script.text(),
 			"context" : "" + Math.floor(Math.random() * 1234),
 			"method" : prev_mode.text(),
-			"logpool" : "192.168.0.150",
+			"logpool" : "localhost",
 			"script" : script
 		};
 		/*
