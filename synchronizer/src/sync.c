@@ -1,4 +1,4 @@
-#include <logpool.h>
+#include <logpool/logpool.h>
 #include <logpool/llcache.h>
 #include <assert.h>
 #include <string.h>

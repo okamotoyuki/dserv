@@ -25,7 +25,7 @@
 /* ************************************************************************ */
 
 #include <sys/time.h>
-#include <logpool.h>
+#include <logpool/logpool.h>
 
 int getTime(void)
 {
