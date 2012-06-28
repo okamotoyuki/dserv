@@ -41,7 +41,7 @@ class Task {
 		return;
 	}
 
-	void sync(int context) {
+	void sync() {
 		// syncronize
 		return;
 	}
