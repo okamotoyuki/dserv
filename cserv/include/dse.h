@@ -250,29 +250,56 @@ static const char* _exportpath(char *pathbuf, size_t bufsiz, const char *pname)
 	return NULL;
 }
 
+static const char* _begin(kinfotag_t t) { (void)t; return ""; }
+static const char* _end(kinfotag_t t) { (void)t; return ""; }
+
+static void _dbg_p(const char *file, const char *func, int L, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap , fmt);
+	fflush(stdout);
+	fprintf(stderr, "DEBUG(%s:%s:%d) ", file, func, L);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	va_end(ap);
+}
+
 #define LOGSIZE 256
 
 static struct dRes *dse_dispatch(struct dReq *req)
 {
 	kplatform_t dse = {
-		.name = "dse",
-		.stacksize = 4096, 
-		.malloc = malloc,
-		.free = free,
-		.realpath = realpath,
-		.fopen = fopen,
-		.fgetc = fgetc,
-		.feof = feof,
-		.fclose = fclose,
+		.name			= "dse",
+		.stacksize		= 4096,
+		.malloc_i		= malloc,
+		.free_i			= free,
+		.setjmp_i		= ksetjmp,
+		.longjmp_i		= klongjmp,
+
+		.realpath_i = realpath,
+		.fopen_i		= (FILE_i * (*)(const char *, const char *))fopen,
+		.fgetc_i		= (int (*)(FILE_i *))fgetc,
+		.feof_i			= (int (*)(FILE_i *))feof,
+		.fclose_i		= (int (*)(FILE_i *))fclose,
+		.syslog_i		= syslog,
+		.vsyslog_i		= vsyslog,
+		.printf_i		= printf,
+		.vprintf_i		= vprintf,
+		.snprintf_i		= snprintf,  // avoid to use Xsnprintf
+		.vsnprintf_i	= vsnprintf, // retreating..
+		.qsort_i		= qsort,
+		.exit_i			= exit,
+		// high level
 		.packagepath = _packagepath,
 		.exportpath = _exportpath,
+		.begin			= _begin,
+		.end			= _end,
+		.dbg_p			= _dbg_p,
 	};
 	konoha_t konoha = konoha_open(&dse);
 	logpool_t *lp;
 	void *logpool_args;
 	int ret;
-	int startlog[LOGSIZE];
-	int endlog[LOGSIZE];
 	D_("scriptpath:%s", req->scriptfilepath);
 	struct dRes *dres = newDRes();
 	switch (req->method){
