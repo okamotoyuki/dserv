@@ -42,7 +42,6 @@ struct dDserv {
 	struct evhttp *httpd;
 };
 
-
 struct dReq {
 	int method;
 	int context;
@@ -101,7 +100,6 @@ static void deleteDRes (struct dRes *res)
 	if (res == NULL) return;
 	dse_free(res, sizeof(struct dRes));
 }
-
 
 /* ************************************************************************ */
 
@@ -242,7 +240,6 @@ static struct dRes *dse_dispatch(struct dReq *req)
 	return dres;
 }
 
-
 static void dse_send_reply(struct evhttp_request *req, struct dRes *dres)
 {
 	struct evbuffer *buf = evbuffer_new();
@@ -299,6 +296,7 @@ void dse_req_handler (struct evhttp_request *req, void *arg)
 	deleteDReq(dreq);
 	deleteDRes(dres);
 }
+
 static struct dDserv *dserv_new(void)
 {
 	struct dDserv *dserv = dse_malloc(sizeof(struct dDserv));
