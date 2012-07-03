@@ -31,10 +31,13 @@
 #include <event2/buffer.h>
 #include <sys/queue.h>
 //#include <actor/actor.h>
+#include <setjmp.h>
+#include <syslog.h>
 #include <jansson.h>
 #include <konoha2/konoha2.h>
 #include "dse_util.h"
 #include "dse_logger.h"
+
 struct dDserv {
 	struct event_base *base;
 	struct evhttp *httpd;
