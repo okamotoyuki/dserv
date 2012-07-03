@@ -31,12 +31,11 @@
 #include <event2/buffer.h>
 #include <sys/queue.h>
 //#include <actor/actor.h>
-#include <setjmp.h>
-#include <syslog.h>
 #include <jansson.h>
 #include <konoha2/konoha2.h>
 #include "dse_util.h"
 #include "dse_logger.h"
+#include "dse_platform.h"
 
 struct dDserv {
 	struct event_base *base;
@@ -171,7 +170,6 @@ static struct dReq *dse_parseJson(const char *input)
 
 	}
 	fwrite(str_script, script_len, 1, fp);
-//	addLoggerScript(fp, json_string_value(taskid));
 	fflush(fp);
 	fclose(fp);
 	json_decref(root);
@@ -211,104 +209,12 @@ static struct dReq *dse_parseJson(const char *input)
 //	Actor_send(a, JSONString_new(req->scriptfilepath, strlen(req->scriptfilepath)));
 //}
 
-static const char* _packname(const char *str)
-{
-	char *p = strrchr(str, '.');
-	return (p == NULL) ? str : (const char*)p+1;
-}
-
-static const char* _packagepath(char *buf, size_t bufsiz, const char *fname)
-{
-	char *path = getenv("KONOHA_PACKAGEPATH"), *local = "";
-	if(path == NULL) {
-		path = getenv("KONOHA_HOME");
-		local = "/package";
-	}
-	if(path == NULL) {
-		path = getenv("HOME");
-		local = "/.konoha2/package";
-	}
-	snprintf(buf, bufsiz, "%s%s/%s/%s_glue.k", path, local, fname, _packname(fname));
-#ifdef K_PREFIX
-	FILE *fp = fopen(buf, "r");
-	if(fp != NULL) {
-		fclose(fp);
-	}
-	else {
-		snprintf(buf, bufsiz, K_PREFIX "/konoha2/package" "/%s/%s_glue.k", fname, _packname(fname));
-	}
-#endif
-	return (const char*)buf;
-}
-
-static const char* _exportpath(char *pathbuf, size_t bufsiz, const char *pname)
-{
-	char *p = strrchr(pathbuf, '/');
-	snprintf(p, bufsiz - (p  - pathbuf), "/%s_exports.k", _packname(pname));
-	FILE *fp = fopen(pathbuf, "r");
-	if(fp != NULL) {
-		fclose(fp);
-		return (const char*)pathbuf;
-	}
-	return NULL;
-}
-
-static const char* _begin(kinfotag_t t) { (void)t; return ""; }
-static const char* _end(kinfotag_t t) { (void)t; return ""; }
-
-static void _dbg_p(const char *file, const char *func, int L, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap , fmt);
-	fflush(stdout);
-	fprintf(stderr, "DEBUG(%s:%s:%d) ", file, func, L);
-	vfprintf(stderr, fmt, ap);
-	fprintf(stderr, "\n");
-	va_end(ap);
-}
-
-static void _NOP_dbg_p(const char *file, const char *func, int line, const char *fmt, ...)
-{
-}
-
 #define LOGSIZE 256
 
 static struct dRes *dse_dispatch(struct dReq *req)
 {
-	kplatform_t dse = {
-		.name			= "dse",
-		.stacksize		= 4096,
-		.malloc_i		= malloc,
-		.free_i			= free,
-		.setjmp_i		= ksetjmp,
-		.longjmp_i		= klongjmp,
-
-		.realpath_i = realpath,
-		.fopen_i		= (FILE_i * (*)(const char *, const char *))fopen,
-		.fgetc_i		= (int (*)(FILE_i *))fgetc,
-		.feof_i			= (int (*)(FILE_i *))feof,
-		.fclose_i		= (int (*)(FILE_i *))fclose,
-		.syslog_i		= syslog,
-		.vsyslog_i		= vsyslog,
-		.printf_i		= printf,
-		.vprintf_i		= vprintf,
-		.snprintf_i		= snprintf,  // avoid to use Xsnprintf
-		.vsnprintf_i	= vsnprintf, // retreating..
-		.qsort_i		= qsort,
-		.exit_i			= exit,
-		// high level
-		.packagepath = _packagepath,
-		.exportpath = _exportpath,
-		.begin			= _begin,
-		.end			= _end,
-		.dbg_p			= _NOP_dbg_p,
-	};
-
-	if(getenv("KONOHA_DEBUG") != NULL) {
-		dse.dbg_p = _dbg_p;
-	}
-
-	konoha_t konoha = konoha_open(&dse);
+	kplatform_t *dse = platform_dse();
+	konoha_t konoha = konoha_open((const kplatform_t *)dse);
 	logpool_t *lp;
 	void *logpool_args;
 	int ret;

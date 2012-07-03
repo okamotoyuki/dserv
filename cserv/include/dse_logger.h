@@ -24,6 +24,9 @@
 
 /* ************************************************************************ */
 
+#ifndef DSE_LOGGER_H_
+#define DSE_LOGGER_H_
+
 #include <sys/time.h>
 #include "config.h"
 
@@ -82,3 +85,7 @@ static void dse_logpool_exit()
 	logpool_record(lp, args, LOG_NOTICE, trace_id, \
 			KEYVALUE_u("time", getTime()), \
 			__VA_ARGS__)
+
+
+
+#endif /* DSE_LOGGER_H_ */
