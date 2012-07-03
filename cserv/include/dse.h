@@ -104,14 +104,6 @@ static void deleteDRes (struct dRes *res)
 
 
 /* ************************************************************************ */
-//void addLoggerScript(FILE *fp, const char *taskid)
-//{
-//	char logger_script[] =
-//		"\nvoid logger() {\nSubproc s = Subproc.new(\"\", false);\ns.enableShellmode(false);\nString str = s.exec(\"logger TaskDone\");\n}\nlogger();";
-//	fwrite(logger_script, strlen(logger_script), 1, fp);
-//	return;
-//}
-
 
 #define JSON_INITGET(O, K) \
 	json_t *K = json_object_get(O, #K)
