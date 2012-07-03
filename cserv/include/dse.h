@@ -264,6 +264,10 @@ static void _dbg_p(const char *file, const char *func, int L, const char *fmt, .
 	va_end(ap);
 }
 
+static void _NOP_dbg_p(const char *file, const char *func, int line, const char *fmt, ...)
+{
+}
+
 #define LOGSIZE 256
 
 static struct dRes *dse_dispatch(struct dReq *req)
@@ -294,8 +298,13 @@ static struct dRes *dse_dispatch(struct dReq *req)
 		.exportpath = _exportpath,
 		.begin			= _begin,
 		.end			= _end,
-		.dbg_p			= _dbg_p,
+		.dbg_p			= _NOP_dbg_p,
 	};
+
+	if(getenv("KONOHA_DEBUG") != NULL) {
+		dse.dbg_p = _dbg_p;
+	}
+
 	konoha_t konoha = konoha_open(&dse);
 	logpool_t *lp;
 	void *logpool_args;
