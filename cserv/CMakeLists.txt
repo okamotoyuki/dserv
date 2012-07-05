@@ -17,5 +17,4 @@ set(LIBS event)
 set(LIBS ${LIBS} jansson)
 set(LIBS ${LIBS} konoha2)
 set(LIBS ${LIBS} logpool)
-
 target_link_libraries(${PROJECT_NAME} ${LIBS})
