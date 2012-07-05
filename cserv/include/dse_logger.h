@@ -28,23 +28,7 @@
 #define DSE_LOGGER_H_
 
 #include <sys/time.h>
-#include "config.h"
-
-#ifdef HAVE_LIBLOGPOOL
 #include <logpool/logpool.h>
-#else
-typedef void logpool_t;
-
-#define LOGPOOL_TRACE 0
-#define LOG_NOTICE 0
-
-void logpool_global_init(int mode) {}
-logpool_t *logpool_open_trace(logpool_t *parent, char *host, int port) { return parent; }
-void logpool_close(logpool_t *p) {}
-void logpool_global_exit(void) {}
-void logpool_record(logpool_t *logpool, void *args, int priority, char *trace_id, ...) {}
-
-#endif /* HAVE_LIBLOGPOOL */
 
 int getTime(void)
 {
