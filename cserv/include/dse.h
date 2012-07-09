@@ -58,8 +58,8 @@ static struct dReq *dse_parseJson(const char *input)
 		D_("error occurs");
 		return NULL;
 	}
-	JSON_INITGET(root, taskid);
-	JSON_INITGET(root, type);
+//	JSON_INITGET(root, taskid);
+//	JSON_INITGET(root, type);
 	JSON_INITGET(root, context);
 	JSON_INITGET(root, method);
 	JSON_INITGET(root, logpool);
@@ -88,10 +88,10 @@ static struct dReq *dse_parseJson(const char *input)
 	strncpy(filename, str_context, context_len);
 	snprintf(filename, context_len+3, "%s.k", str_context);
 	FILE *fp = fopen(filename, "w");
-	char *str_script= json_string_value(script);
+	char *str_script = (char *)json_string_value(script);
 	// replace "'" --> "\"";
 	size_t script_len = strlen(str_script);
-	char ch;
+//	char ch;
 	int idx = 0;
 	for (idx = 0; idx < script_len; idx++) {
 		if (str_script[idx] == '\'') {
@@ -186,10 +186,17 @@ void dse_req_handler(struct evhttp_request *req, void *arg)
 		//now, parse json.
 		dreq = dse_parseJson((const char*)requestLine);
 		dreq->req = req;
-		dse_dispatch(dreq);
+		pthread_mutex_lock(&dscd->lock);
+		if(dse_enqueue(dscd, dreq)) {
+			pthread_mutex_unlock(&dscd->lock);
+			pthread_cond_signal(&dscd->cond);
+			return;
+		}
+		pthread_mutex_unlock(&dscd->lock);
+		evhttp_send_error(req, HTTP_BADREQUEST, "DSE server's request queue is full");
+//		dse_dispatch(dreq);
 		//evbuffer_add_printf(buf, "Reqested POSPOS: %s\n", evhttp_request_uri(req));
 		//evhttp_send_reply(req, HTTP_OK, "OK", buf);
-
 	}
 	else{
 		evhttp_send_error(req, HTTP_BADREQUEST, "Available POST only");
@@ -212,7 +219,6 @@ static int dserv_start(struct dDserv *dserv, const char *addr, int ip)
 		exit(EXIT_FAILURE);
 	}
 	evhttp_set_gencb(dserv->httpd, dse_req_handler, (void *)dserv->dscd);
-
 	event_base_dispatch(dserv->base);
 	return 0;
 }

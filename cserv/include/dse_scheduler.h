@@ -69,7 +69,9 @@ static bool dse_enqueue(struct dScheduler *dscd, struct dReq *dreq)
 
 static struct dReq *dse_dequeue(struct dScheduler *dscd)
 {
+	int front = dscd->front;
 	int last = dscd->last;
+	if(front == last) return NULL;
 	struct dReq *dreq = dscd->dReqQueue[last];
 	dscd->last = next(last);
 	return dreq;
@@ -87,45 +89,57 @@ static void dse_send_reply(struct evhttp_request *req, struct dRes *dres)
 	}
 }
 
-static void dse_dispatch(struct dReq *dreq)
+static void *dse_dispatch(void *arg)
 {
 	kplatform_t *dse = platform_dse();
-	konoha_t konoha = konoha_open((const kplatform_t *)dse);
+	konoha_t konoha;
 	logpool_t *lp;
-	void *logpool_args;
+	struct dScheduler *dscd = (struct dScheduler *)arg;
+	struct dReq *dreq;
+	struct dRes *dres;
 	int ret;
-	D_("scriptpath:%s", dreq->scriptfilepath);
-	struct dRes *dres = newDRes();
-	switch (dreq->method){
-		case E_METHOD_EVAL: case E_METHOD_TYCHECK:
-			lp = dse_openlog(dreq->logpoolip);
-			dse_record(lp, &logpool_args, "task",
-					KEYVALUE_u("context", dreq->context),
-					KEYVALUE_s("status", "start"),
-					LOG_END);
-			ret = konoha_load(konoha, dreq->scriptfilepath);
-			dse_record(lp, &logpool_args, "task",
-					KEYVALUE_u("context", dreq->context),
-					KEYVALUE_s("status", "done"),
-					LOG_END);
+	void *logpool_args;
+	while(true) {
+		pthread_mutex_lock(&dscd->lock);
+		if(!(dreq = dse_dequeue(dscd))) {
+			pthread_cond_wait(&dscd->cond, &dscd->lock);
+			dreq = dse_dequeue(dscd);
+		}
+		pthread_mutex_unlock(&dscd->lock);
+		D_("scriptpath:%s", dreq->scriptfilepath);
+		dres = newDRes();
+		konoha = konoha_open((const kplatform_t *)dse);
+		switch (dreq->method){
+			case E_METHOD_EVAL: case E_METHOD_TYCHECK:
+				lp = dse_openlog(dreq->logpoolip);
+				dse_record(lp, &logpool_args, "task",
+						KEYVALUE_u("context", dreq->context),
+						KEYVALUE_s("status", "start"),
+						LOG_END);
+				ret = konoha_load(konoha, dreq->scriptfilepath);
+				dse_record(lp, &logpool_args, "task",
+						KEYVALUE_u("context", dreq->context),
+						KEYVALUE_s("status", "done"),
+						LOG_END);
 
-			dse_closelog(lp);
-			//		eval_actor(dreq);
-			if(ret == 1) {
-				// ok;
-				dres->status = E_STATUS_OK;
-			}
-			break;
-			//case E_METHOD_TYCHECK:
-			//	break;
-		default:
-			D_("there's no such method");
-			break;
+				dse_closelog(lp);
+				//		eval_actor(dreq);
+				if(ret == 1) {
+					// ok;
+					dres->status = E_STATUS_OK;
+				}
+				break;
+				//case E_METHOD_TYCHECK:
+				//	break;
+			default:
+				D_("there's no such method");
+				break;
+		}
+		konoha_close(konoha);
+		dse_send_reply(dreq->req, dres);
+		deleteDReq(dreq);
+		deleteDRes(dres);
 	}
-	konoha_close(konoha);
-	dse_send_reply(dreq->req, dres);
-	deleteDReq(dreq);
-	deleteDRes(dres);
 }
 
 #endif /* DSE_SCHEDULER_H_ */
