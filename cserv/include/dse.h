@@ -190,6 +190,9 @@ void dse_req_handler(struct evhttp_request *req, void *arg)
 		if(dse_enqueue(dscd, dreq)) {
 			pthread_mutex_unlock(&dscd->lock);
 			pthread_cond_signal(&dscd->cond);
+			struct evbuffer *buf = evbuffer_new();   // FIXME
+			evhttp_send_reply(req, HTTP_OK, "OK", buf);
+			evbuffer_free(buf);
 			return;
 		}
 		pthread_mutex_unlock(&dscd->lock);

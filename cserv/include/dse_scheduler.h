@@ -85,8 +85,10 @@ static void dse_send_reply(struct evhttp_request *req, struct dRes *dres)
 			evhttp_send_reply(req, HTTP_OK, "OK", buf);
 			break;
 		default:
+			evhttp_send_reply(req, HTTP_OK, "FAIL", buf);
 			break;
 	}
+	evbuffer_free(buf);
 }
 
 static void *dse_dispatch(void *arg)
@@ -136,7 +138,7 @@ static void *dse_dispatch(void *arg)
 				break;
 		}
 		konoha_close(konoha);
-		dse_send_reply(dreq->req, dres);
+//		dse_send_reply(dreq->req, dres);
 		deleteDReq(dreq);
 		deleteDRes(dres);
 	}
