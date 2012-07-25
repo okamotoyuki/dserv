@@ -30,7 +30,6 @@
 #include <evhttp.h>
 #include <event2/buffer.h>
 #include <sys/queue.h>
-//#include <actor/actor.h>
 #include <jansson.h>
 #include <konoha2/konoha2.h>
 #include "dse_util.h"
@@ -107,39 +106,6 @@ static struct dReq *dse_parseJson(const char *input)
 	json_decref(root);
 	return ret;
 }
-
-//static void eval_actor_init(Actor *a) { /* do nothing */ }
-//static void eval_actor_exit(Actor *a) { /* do nothing */ }
-//
-//static int eval_actor_act(Actor *a, Message *message)
-//{
-//	if (JSON_type(message) == JSON_String) {
-//		char *filepath = JSONString_get(a->self, 6);
-//		filepath[5] = '\0';
-//		konoha_t konoha = konoha_open();
-//		int ret = konoha_load(konoha, filepath);
-//		konoha_close(konoha);
-//	}
-//	return 0;
-//}
-//
-//static const struct actor_api eval_actor_api = {
-//	eval_actor_act,
-//	eval_actor_init,
-//	eval_actor_exit
-//};
-//
-//static void eval_actor(struct dReq *req)
-//{
-//	if (ActorStage_init(1, 1)) {
-//		D_("ActorStageinit, failed");
-//	}
-//
-//	JSON message = JSONInt_new(1);
-//	Actor *a = Actor_new(message, &eval_actor_api);
-//	Actor_act(a);
-//	Actor_send(a, JSONString_new(req->scriptfilepath, strlen(req->scriptfilepath)));
-//}
 
 /* ************************************************************************ */
 
