@@ -34,10 +34,10 @@
 #include <sys/queue.h>
 #include <sys/wait.h>
 #include <jansson.h>
-#include "dse_util.h"
-#include "dse_logger.h"
-#include "dse_protocol.h"
-#include "dse_scheduler.h"
+#include "util.h"
+#include "logger.h"
+#include "protocol.h"
+#include "scheduler.h"
 
 struct dDserv;
 

@@ -23,31 +23,21 @@
  ***************************************************************************/
 
 /* ************************************************************************ */
-#ifndef DSE_UTIL_H_
-#define DSE_UTIL_H_
 
-#include "dse_debug.h"
-size_t gTotalMalloc;
-void *dse_malloc(size_t size)
-{
-	void *ptr = malloc(size);
-	if (ptr == NULL) {
-		D_("malloc failed");
-		size = 0;
-	}
-	gTotalMalloc += size;
+#ifndef DSE_DEBUG_H_
+#define DSE_DEBUG_H_
 
-	return ptr;
-}
+#include <assert.h>
 
-void dse_free(void *ptr, size_t size)
-{
-	free(ptr);
-	gTotalMalloc -= size;
-	A_(gTotalMalloc >= 0);
-}
+#define DSE_DEBUG 1
+#if defined(DSE_DEBUG)
+#define D_(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
+#define A_(stmt) assert(stmt);
+#else
+#define D_(fmt, ...)
+#define A_(stmt)
+#endif
 
 
 
-
-#endif /* DSE_UTIL_H_ */
+#endif /* DSE_DEBUG_H_ */
