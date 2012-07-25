@@ -26,6 +26,7 @@
 #ifndef DSE_H_
 #define DSE_H_
 
+#include <stdbool.h>
 #include <unistd.h>
 #include <event.h>
 #include <evhttp.h>
@@ -35,7 +36,6 @@
 #include <jansson.h>
 #include "dse_util.h"
 #include "dse_logger.h"
-#include "dse_platform.h"
 #include "dse_protocol.h"
 #include "dse_scheduler.h"
 
