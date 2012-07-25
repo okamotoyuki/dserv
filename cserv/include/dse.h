@@ -255,6 +255,7 @@ static void *dse_dispatch(void *arg)
 						dse_record(lp, &logpool_args, "task",
 								KEYVALUE_u("context", dreq->context),
 								KEYVALUE_s("status", "start"),
+								KEYVALUE_u("pid", getpid()),
 								LOG_END);
 						execlp(cmd_konoha, cmd_konoha, dreq->scriptfilepath, NULL);
 						dse_record(lp, &logpool_args, "task",
@@ -278,6 +279,7 @@ static void *dse_dispatch(void *arg)
 				deleteDRes(dres);
 				exit(-1);
 			default:
+				D_("pid: %d", pid);
 				waitpid(pid, &status, 0);
 				lp = dse_openlog(dreq->logpoolip);
 				if(WIFEXITED(status)) {
