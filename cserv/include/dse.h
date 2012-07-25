@@ -223,8 +223,6 @@ static void dserv_close(struct dDserv *dserv)
 
 static void *dse_dispatch(void *arg)
 {
-//	kplatform_t *dse = platform_dse();
-//	konoha_t konoha;
 	struct dScheduler *dscd = (struct dScheduler *)arg;
 	struct dReq *dreq;
 	struct dRes *dres;
@@ -233,7 +231,6 @@ static void *dse_dispatch(void *arg)
 	char cmd_sh[] = "sh";
 	pid_t pid;
 	int status = 0;
-//	int ret;
 	logpool_t *lp;
 	void *logpool_args;
 	while(true) {
@@ -245,7 +242,6 @@ static void *dse_dispatch(void *arg)
 		pthread_mutex_unlock(&dscd->lock);
 		D_("scriptpath:%s", dreq->scriptfilepath);
 		dres = newDRes();
-//		konoha = konoha_open((const kplatform_t *)dse);
 		pid = fork();
 		switch(pid) {
 			case -1:
@@ -253,7 +249,6 @@ static void *dse_dispatch(void *arg)
 				D_("error in fork()");
 				exit(-1);
 			case 0:
-//				dserv_close(gdserv);
 				switch (dreq->method){
 					case E_METHOD_EVAL: case E_METHOD_TYCHECK:
 						lp = dse_openlog(dreq->logpoolip);
@@ -261,9 +256,7 @@ static void *dse_dispatch(void *arg)
 								KEYVALUE_u("context", dreq->context),
 								KEYVALUE_s("status", "start"),
 								LOG_END);
-//						ret = konoha_load(konoha, dreq->scriptfilepath);
 						execlp(cmd_konoha, cmd_konoha, dreq->scriptfilepath, NULL);
-//						execlp(cmd_sh, cmd_sh, dreq->scriptfilepath, NULL);
 						dse_record(lp, &logpool_args, "task",
 								KEYVALUE_u("context", dreq->context),
 								KEYVALUE_s("status", "failed"),
@@ -280,7 +273,6 @@ static void *dse_dispatch(void *arg)
 						D_("there's no such method");
 						break;
 				}
-//				konoha_close(konoha);
 //				dse_send_reply(dreq->req, dres);
 				deleteDReq(dreq);
 				deleteDRes(dres);
