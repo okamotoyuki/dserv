@@ -32,17 +32,19 @@
 #define HTTPD_ADDR "0.0.0.0"
 #define HTTPD_PORT 8080
 
+struct dDserv *gdserv;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int main (int argc, char **av)
+int main(int argc, char **av)
 {
-	struct dDserv *dserv = NULL;
+	gdserv = NULL;
 	dse_logpool_init();
-	dserv = dserv_new();
-	dserv_start(dserv, HTTPD_ADDR, HTTPD_PORT);
-	dserv_close(dserv);
+	gdserv = dserv_new();
+	dserv_start(gdserv, HTTPD_ADDR, HTTPD_PORT);
+	dserv_close(gdserv);
 	dse_logpool_exit();
 	return 0;
 }

@@ -26,17 +26,22 @@
 #ifndef DSE_H_
 #define DSE_H_
 
+#include <unistd.h>
 #include <event.h>
 #include <evhttp.h>
 #include <event2/buffer.h>
 #include <sys/queue.h>
+#include <sys/wait.h>
 #include <jansson.h>
-#include <konoha2/konoha2.h>
 #include "dse_util.h"
 #include "dse_logger.h"
 #include "dse_platform.h"
 #include "dse_protocol.h"
 #include "dse_scheduler.h"
+
+struct dDserv;
+
+extern struct dDserv *gdserv;
 
 struct dDserv {
 	struct event_base *base;
@@ -123,6 +128,8 @@ void dump_http_header(struct evhttp_request *req, struct evbuffer *evb, void *ct
 	evhttp_send_reply(req, HTTP_OK, "OK", evb);
 }
 
+static void *dse_dispatch(void *arg);
+
 #define THREAD_SIZE 8
 
 // request handler for DSE Protocol
@@ -164,8 +171,8 @@ void dse_req_handler(struct evhttp_request *req, void *arg)
 		pthread_mutex_unlock(&dscd->lock);
 		evhttp_send_error(req, HTTP_BADREQUEST, "DSE server's request queue is full");
 //		dse_dispatch(dreq);
-		//evbuffer_add_printf(buf, "Reqested POSPOS: %s\n", evhttp_request_uri(req));
-		//evhttp_send_reply(req, HTTP_OK, "OK", buf);
+//		evbuffer_add_printf(buf, "Reqested POSPOS: %s\n", evhttp_request_uri(req));
+//		evhttp_send_reply(req, HTTP_OK, "OK", buf);
 	}
 	else{
 		evhttp_send_error(req, HTTP_BADREQUEST, "Available POST only");
@@ -198,6 +205,104 @@ static void dserv_close(struct dDserv *dserv)
 	event_base_free(dserv->base);
 	deleteDScheduler(dserv->dscd);
 	dse_free(dserv, sizeof(struct dDserv));
+}
+
+//static void dse_send_reply(struct evhttp_request *req, struct dRes *dres)
+//{
+//	struct evbuffer *buf = evbuffer_new();
+//	switch(dres->status){
+//		case E_STATUS_OK:
+//			evhttp_send_reply(req, HTTP_OK, "OK", buf);
+//			break;
+//		default:
+//			evhttp_send_reply(req, HTTP_OK, "FAIL", buf);
+//			break;
+//	}
+//	evbuffer_free(buf);
+//}
+
+static void *dse_dispatch(void *arg)
+{
+//	kplatform_t *dse = platform_dse();
+//	konoha_t konoha;
+	struct dScheduler *dscd = (struct dScheduler *)arg;
+	struct dReq *dreq;
+	struct dRes *dres;
+	char cmd_konoha[] = "konoha";
+	char cmd_option_tycheck[] = "-c";
+	char cmd_sh[] = "sh";
+	pid_t pid;
+	int status = 0;
+//	int ret;
+	logpool_t *lp;
+	void *logpool_args;
+	while(true) {
+		pthread_mutex_lock(&dscd->lock);
+		if(!(dreq = dse_dequeue(dscd))) {
+			pthread_cond_wait(&dscd->cond, &dscd->lock);
+			dreq = dse_dequeue(dscd);
+		}
+		pthread_mutex_unlock(&dscd->lock);
+		D_("scriptpath:%s", dreq->scriptfilepath);
+		dres = newDRes();
+//		konoha = konoha_open((const kplatform_t *)dse);
+		pid = fork();
+		switch(pid) {
+			case -1:
+				dserv_close(gdserv);
+				D_("error in fork()");
+				exit(-1);
+			case 0:
+//				dserv_close(gdserv);
+				switch (dreq->method){
+					case E_METHOD_EVAL: case E_METHOD_TYCHECK:
+						lp = dse_openlog(dreq->logpoolip);
+						dse_record(lp, &logpool_args, "task",
+								KEYVALUE_u("context", dreq->context),
+								KEYVALUE_s("status", "start"),
+								LOG_END);
+//						ret = konoha_load(konoha, dreq->scriptfilepath);
+						execlp(cmd_konoha, cmd_konoha, dreq->scriptfilepath, NULL);
+//						execlp(cmd_sh, cmd_sh, dreq->scriptfilepath, NULL);
+						dse_record(lp, &logpool_args, "task",
+								KEYVALUE_u("context", dreq->context),
+								KEYVALUE_s("status", "failed"),
+								LOG_END);
+						dse_closelog(lp);
+//						if(ret == 1) {
+						// ok;
+//							dres->status = E_STATUS_OK;
+//						}
+						break;
+						//case E_METHOD_TYCHECK:
+						//	break;
+					default:
+						D_("there's no such method");
+						break;
+				}
+//				konoha_close(konoha);
+//				dse_send_reply(dreq->req, dres);
+				deleteDReq(dreq);
+				deleteDRes(dres);
+				exit(-1);
+			default:
+				waitpid(pid, &status, 0);
+				lp = dse_openlog(dreq->logpoolip);
+				if(WIFEXITED(status)) {
+					dse_record(lp, &logpool_args, "task",
+							KEYVALUE_u("context", dreq->context),
+							KEYVALUE_s("status", "done"),
+							LOG_END);
+				} else {
+					dse_record(lp, &logpool_args, "task",
+							KEYVALUE_u("context", dreq->context),
+							KEYVALUE_s("status", "failed"),
+							LOG_END);
+				}
+				dse_closelog(lp);
+				break;
+		}
+	}
 }
 
 #endif /* DSE_H_ */
