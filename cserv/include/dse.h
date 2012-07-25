@@ -226,7 +226,7 @@ static void *dse_dispatch(void *arg)
 	struct dScheduler *dscd = (struct dScheduler *)arg;
 	struct dReq *dreq;
 	struct dRes *dres;
-	char cmd_konoha[] = "konoha";
+	char cmd_konoha[] = "minikonoha";
 	char cmd_option_tycheck[] = "-c";
 	char cmd_sh[] = "sh";
 	pid_t pid;
