@@ -170,9 +170,6 @@ void dse_req_handler(struct evhttp_request *req, void *arg)
 		}
 		pthread_mutex_unlock(&dscd->lock);
 		evhttp_send_error(req, HTTP_BADREQUEST, "DSE server's request queue is full");
-//		dse_dispatch(dreq);
-//		evbuffer_add_printf(buf, "Reqested POSPOS: %s\n", evhttp_request_uri(req));
-//		evhttp_send_reply(req, HTTP_OK, "OK", buf);
 	}
 	else{
 		evhttp_send_error(req, HTTP_BADREQUEST, "Available POST only");
@@ -252,13 +249,13 @@ static void *dse_dispatch(void *arg)
 				switch (dreq->method){
 					case E_METHOD_EVAL: case E_METHOD_TYCHECK:
 						lp = dse_openlog(dreq->logpoolip);
-						dse_record(lp, &logpool_args, "task",
+						dse_record(lp, &logpool_args, "dtask",
 								KEYVALUE_u("context", dreq->context),
 								KEYVALUE_s("status", "start"),
 								KEYVALUE_u("pid", getpid()),
 								LOG_END);
 						execlp(cmd_konoha, cmd_konoha, dreq->scriptfilepath, NULL);
-						dse_record(lp, &logpool_args, "task",
+						dse_record(lp, &logpool_args, "dtask",
 								KEYVALUE_u("context", dreq->context),
 								KEYVALUE_s("status", "failed"),
 								LOG_END);
@@ -283,12 +280,12 @@ static void *dse_dispatch(void *arg)
 				waitpid(pid, &status, 0);
 				lp = dse_openlog(dreq->logpoolip);
 				if(WIFEXITED(status)) {
-					dse_record(lp, &logpool_args, "task",
+					dse_record(lp, &logpool_args, "dtask",
 							KEYVALUE_u("context", dreq->context),
 							KEYVALUE_s("status", "done"),
 							LOG_END);
 				} else {
-					dse_record(lp, &logpool_args, "task",
+					dse_record(lp, &logpool_args, "dtask",
 							KEYVALUE_u("context", dreq->context),
 							KEYVALUE_s("status", "failed"),
 							LOG_END);
