@@ -96,15 +96,14 @@ static struct dReq *dse_parseJson(const char *input)
 	// replace "'" --> "\"";
 	size_t script_len = strlen(str_script);
 //	char ch;
-	int idx = 0;
-	for (idx = 0; idx < script_len; idx++) {
-		if (str_script[idx] == '\'') {
-			str_script[idx] ='"';
-		} else if (str_script[idx] == '@') {
-			str_script[idx] = '\n';
-		}
-
-	}
+//	int idx = 0;
+//	for (idx = 0; idx < script_len; idx++) {
+//		if (str_script[idx] == '\'') {
+//			str_script[idx] ='"';
+//		} else if (str_script[idx] == '@') {
+//			str_script[idx] = '\n';
+//		}
+//	}
 	fwrite(str_script, script_len, 1, fp);
 	fflush(fp);
 	fclose(fp);
@@ -224,7 +223,7 @@ static void *dse_dispatch(void *arg)
 	struct dReq *dreq;
 	struct dRes *dres;
 	char cmd_konoha[] = "minikonoha";
-	char cmd_option_tycheck[] = "-c";
+	char cmd_opt_tycheck[] = "-c";
 	char cmd_sh[] = "sh";
 	pid_t pid;
 	int status = 0;
