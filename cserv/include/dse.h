@@ -244,7 +244,7 @@ static void *dse_dispatch(void *arg)
 			case -1:
 				dserv_close(gdserv);
 				D_("error in fork()");
-				exit(-1);
+				exit(1);
 			case 0:
 				switch (dreq->method){
 					case E_METHOD_EVAL: case E_METHOD_TYCHECK:
@@ -274,7 +274,7 @@ static void *dse_dispatch(void *arg)
 //				dse_send_reply(dreq->req, dres);
 				deleteDReq(dreq);
 				deleteDRes(dres);
-				exit(-1);
+				exit(1);
 			default:
 				D_("pid: %d", pid);
 				waitpid(pid, &status, 0);
@@ -283,11 +283,13 @@ static void *dse_dispatch(void *arg)
 					dse_record(lp, &logpool_args, "dtask",
 							KEYVALUE_u("context", dreq->context),
 							KEYVALUE_s("status", "done"),
+							KEYVALUE_u("exit status", WEXITSTATUS(status)),
 							LOG_END);
 				} else {
 					dse_record(lp, &logpool_args, "dtask",
 							KEYVALUE_u("context", dreq->context),
 							KEYVALUE_s("status", "failed"),
+							KEYVALUE_u("exit status", WEXITSTATUS(status)),
 							LOG_END);
 				}
 				dse_closelog(lp);
